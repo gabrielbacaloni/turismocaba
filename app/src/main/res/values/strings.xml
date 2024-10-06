@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">turismocaba</string>
+    <string name="content_description_imagen_lugar">Descripción de la imagen del lugar turístico</string>
+    <string name="content_description_agregar_favoritos">Agregar a Favoritos</string>
 </resources>

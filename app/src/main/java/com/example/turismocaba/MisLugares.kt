@@ -9,18 +9,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.*
 
 class MisLugaresActivity : AppCompatActivity() {
 
-    // Variables de la clase
     private lateinit var lugaresAdapter: LugaresAdapter
     private lateinit var dbHelper: TurismoCABADBHelper
     private var currentLugar: LugarTuristico? = null
     private var currentPhotoUri: Uri? = null
 
     companion object {
-        // Constante para el request de captura de imagen
         private const val REQUEST_IMAGE_CAPTURE = 1
     }
 
@@ -32,27 +31,43 @@ class MisLugaresActivity : AppCompatActivity() {
         dbHelper = TurismoCABADBHelper(this)
 
         val recyclerView: RecyclerView = findViewById(R.id.rvMisLugares)
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView) // Referencia al BottomNavigationView
 
-        // Obtener la lista de lugares seleccionados usando getParcelableArrayListExtra
+        // Obtener la lista de lugares seleccionados
         val lugaresSeleccionados = intent.getParcelableArrayListExtra<LugarTuristico>("lugaresSeleccionados") ?: arrayListOf()
 
         // Configurar el RecyclerView
         configurarRecyclerView(recyclerView, lugaresSeleccionados)
+
+        // Configurar el BottomNavigationView
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                R.id.navigation_mis_lugares -> {
+                    Toast.makeText(this, "Estás en Mis Lugares", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                R.id.navigation_perfil -> {
+                    val intent = Intent(this, PerfilActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     private fun configurarRecyclerView(recyclerView: RecyclerView, lugares: List<LugarTuristico>) {
         lugaresAdapter = LugaresAdapter(lugares) { lugar ->
             currentLugar = lugar
-            mostrarOpciones(lugar)
+            capturarFoto(lugar) // Capturar foto al seleccionar un lugar
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = lugaresAdapter
-    }
-
-    private fun mostrarOpciones(lugar: LugarTuristico) {
-        Toast.makeText(this, "Abriendo opciones para ${lugar.nombre}", Toast.LENGTH_SHORT).show()
-        capturarFoto(lugar) // Abrir la cámara
-        mostrarCalendario(lugar) // Mostrar el calendario
     }
 
     private fun capturarFoto(lugar: LugarTuristico) {
@@ -64,7 +79,7 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 
-    private fun mostrarCalendario(lugar: LugarTuristico) {
+    private fun mostrarCalendario() {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -72,7 +87,7 @@ class MisLugaresActivity : AppCompatActivity() {
 
         val datePickerDialog = DatePickerDialog(this, { _, year, monthOfYear, dayOfMonth ->
             val fechaSeleccionada = "$dayOfMonth/${monthOfYear + 1}/$year"
-            guardarLugarEnBaseDeDatos(lugar, currentPhotoUri?.toString(), fechaSeleccionada)
+            guardarLugarEnBaseDeDatos(currentLugar!!, currentPhotoUri?.toString(), fechaSeleccionada)
             Toast.makeText(this, "Fecha seleccionada: $fechaSeleccionada", Toast.LENGTH_SHORT).show()
         }, year, month, day)
 
@@ -85,6 +100,7 @@ class MisLugaresActivity : AppCompatActivity() {
             val imageUri = data?.data
             currentPhotoUri = imageUri
             Toast.makeText(this, "Foto capturada", Toast.LENGTH_SHORT).show()
+            mostrarCalendario() // Mostrar calendario después de capturar la foto
         }
     }
 
