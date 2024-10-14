@@ -1,36 +1,44 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:gravity="center_vertical">
+    android:padding="8dp">
 
+    <!-- Imagen del lugar -->
     <ImageView
         android:id="@+id/ivImagen"
-        android:layout_width="108dp"
-        android:layout_height="108dp"
-        android:layout_marginEnd="16dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/content_description_imagen_lugar"
-        android:scaleType="fitCenter" />
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="8dp" />
 
-    <TextView
-        android:id="@+id/tvNombreLugar"
+    <!-- Nombre del lugar y botón de favoritos en un LinearLayout vertical -->
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="18sp"
-        android:textColor="@color/text_primary"
-        android:ellipsize="end"
-        android:maxLines="1" />
+        android:orientation="vertical">
 
+        <!-- Nombre del lugar -->
+        <TextView
+            android:id="@+id/tvNombreLugar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:text="Nombre del lugar"
+            android:layout_marginTop="18dp"
+            android:layout_marginStart="16dp"/>
+
+    </LinearLayout>
+
+    <!-- Botón de favoritos -->
     <ImageButton
         android:id="@+id/btnAgregarFavorito"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_favorite_border"
+        android:contentDescription="Agregar a favoritos"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/content_description_agregar_favoritos"
-        android:src="@drawable/ic_favorite_border" />
+        android:layout_gravity="center_vertical" />
 </LinearLayout>

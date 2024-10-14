@@ -10,6 +10,18 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Flecha de retroceso -->
+        <ImageView
+            android:id="@+id/ivBackArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Retroceder"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="start"
+            android:clickable="true"
+            android:focusable="true" />
+
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
@@ -192,7 +204,7 @@
             android:id="@+id/btnCancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cancelar"
+            android:text="Limpiar Filtros"
             android:background="@color/colorAccent"
             android:textColor="@android:color/white" />
 

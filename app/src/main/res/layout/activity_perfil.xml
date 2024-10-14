@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Título de la pantalla de perfil -->
+    <!-- Título Pantalla de Perfil -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -20,17 +20,127 @@
         android:textColor="@color/text_primary"
         android:textStyle="bold" />
 
-    <!-- Espaciador para empujar el BottomNavigationView hacia abajo -->
+    <!-- Campo para mostrar el nombre de usuario -->
+    <TextView
+        android:id="@+id/tvNombreUsuario"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:text="Nombre de Usuario"
+        android:textSize="18sp"
+        android:textColor="@color/text_primary" />
+
+    <!-- Campo para la Contraseña Actual -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Contraseña Actual"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/etContrasenaActual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ingrese su contraseña actual"
+            android:inputType="textPassword" />
+    </LinearLayout>
+
+    <!-- Campo para la Nueva Contraseña -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nueva Contraseña"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/etNuevaContrasena"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ingrese su nueva contraseña"
+            android:inputType="textPassword" />
+    </LinearLayout>
+
+    <!-- Campo para la Pregunta de Seguridad 1 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pregunta de Seguridad 1"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/etPreguntaSeguridad1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Modifique su primera pregunta de seguridad" />
+    </LinearLayout>
+
+    <!-- Campo para la Pregunta de Seguridad 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pregunta de Seguridad 2"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/etPreguntaSeguridad2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Modifique su segunda pregunta de seguridad" />
+    </LinearLayout>
+
+    <!-- Botón de Aceptar Cambios -->
+    <Button
+        android:id="@+id/btnAceptarCambios"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aceptar Cambios"
+        android:background="@color/colorPrimary"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Botón de Cerrar Sesión -->
+    <Button
+        android:id="@+id/btnCerrarSesion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cerrar Sesión"
+        android:background="@color/colorAccent"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Separador para ajustar el espacio -->
     <View
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- BottomNavigationView en la parte inferior -->
+    <!-- Navegación Inferior -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
+        android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/windowBackground"
+        android:layout_gravity="bottom"
         app:menu="@menu/bottom_navigation_menu" />
+
 </LinearLayout>

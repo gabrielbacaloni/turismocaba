@@ -16,7 +16,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Habilitar el soporte para vectores en versiones anteriores a Lollipop
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -49,8 +48,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.ui.text.android)
+    implementation(libs.protolite.well.known.types)
     testImplementation(libs.junit)
     implementation(libs.glide)
+    implementation(libs.glide.transformations)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

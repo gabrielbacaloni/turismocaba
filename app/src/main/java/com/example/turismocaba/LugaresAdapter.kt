@@ -6,68 +6,66 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.util.Log
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CircleCrop
 
-class LugaresAdapter(
-    private val lugares: List<LugarTuristico>, // Lista de lugares turísticos
-    private val onLugarFavoritoClick: (LugarTuristico) -> Unit // Callback para manejar clic en "Favoritos"
-) : RecyclerView.Adapter<LugaresAdapter.LugaresViewHolder>() {
+class MisLugaresAdapter(
+    private val lugaresFavoritos: List<LugarTuristico>,
+    private val onOpcionClick: (LugarTuristico, OpcionTipo) -> Unit,
+    private val onQuitarFavoritoClick: (LugarTuristico) -> Unit
+) : RecyclerView.Adapter<MisLugaresAdapter.MisLugaresViewHolder>() {
 
-    private val lugaresFavoritos = mutableListOf<LugarTuristico>() // Lista para almacenar los lugares favoritos
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LugaresViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MisLugaresViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val view = layoutInflater.inflate(R.layout.item_lugar, parent, false)
-        return LugaresViewHolder(view)
+        val view = layoutInflater.inflate(R.layout.item_lugar_favorito, parent, false)
+        return MisLugaresViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: LugaresViewHolder, position: Int) {
-        val lugar = lugares[position]
+    override fun onBindViewHolder(holder: MisLugaresViewHolder, position: Int) {
+        val lugar = lugaresFavoritos[position]
 
         // Configurar el nombre del lugar
         holder.tvNombreLugar.text = lugar.nombre
 
-        // Configurar el botón de favoritos (estrella)
-        holder.btnAgregarFavorito.setImageResource(
-            if (lugaresFavoritos.contains(lugar)) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
-        )
+        // Cargar la imagen del lugar de forma circular con Glide usando el ID de recurso directamente
+        Glide.with(holder.itemView.context)
+            .load(lugar.imagen) // Usar directamente el ID del recurso de imagen
+            .transform(CircleCrop()) // Aplicar la transformación circular
+            .into(holder.imagenImageView)
 
-        holder.btnAgregarFavorito.setOnClickListener {
-            if (lugaresFavoritos.contains(lugar)) {
-                lugaresFavoritos.remove(lugar)
-            } else {
-                lugaresFavoritos.add(lugar)
-            }
-
-            // Cambiar el icono de la estrella según si es favorito o no
-            holder.btnAgregarFavorito.setImageResource(
-                if (lugaresFavoritos.contains(lugar)) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
-            )
-
-            // Llamar al callback para agregar el lugar a "Mis Lugares"
-            onLugarFavoritoClick(lugar)
+        // Configurar el botón de quitar favorito
+        holder.btnQuitarFavorito.setOnClickListener {
+            onQuitarFavoritoClick(lugar)
         }
 
-        // Mostrar la imagen del lugar usando Glide
-        Log.d("LugaresAdapter", "Imagen asignada: ${lugar.imagen}")
+        // Configurar el carrusel de opciones
+        val opcionesLugar = listOf(
+            OpcionLugar("Ir a ubicación", R.drawable.ic_mapa, OpcionTipo.UBICACION),
+            OpcionLugar("Sacar foto", R.drawable.ic_camera, OpcionTipo.FOTO),
+            OpcionLugar("Abrir calendario", R.drawable.ic_calendar, OpcionTipo.CALENDARIO)
+        )
 
-        Glide.with(holder.itemView.context)
-            .load(lugar.imagen)  // Cargar la imagen (asumiendo que lugar.imagen es un recurso o URL)
-            .placeholder(R.drawable.placeholder_image) // Imagen de carga
-            .error(R.drawable.error_image) // Imagen de error
-            .into(holder.imagenImageView) // Carga la imagen en el ImageView
+        // Crear un adaptador para las opciones del lugar
+        val opcionesAdapter = OpcionesLugarAdapter(opcionesLugar) { opcion ->
+            onOpcionClick(lugar, opcion.tipo)
+        }
+
+        // Configurar el RecyclerView de las opciones
+        holder.rvOpcionesLugar.layoutManager = LinearLayoutManager(holder.itemView.context, LinearLayoutManager.HORIZONTAL, false)
+        holder.rvOpcionesLugar.adapter = opcionesAdapter
     }
 
     override fun getItemCount(): Int {
-        return lugares.size
+        return lugaresFavoritos.size
     }
 
     // Clase ViewHolder para las vistas
-    class LugaresViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class MisLugaresViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNombreLugar: TextView = itemView.findViewById(R.id.tvNombreLugar)
-        val btnAgregarFavorito: ImageButton = itemView.findViewById(R.id.btnAgregarFavorito) // Referencia al botón de favoritos
-        val imagenImageView: ImageView = itemView.findViewById(R.id.ivImagen) // Imagen del lugar
+        val imagenImageView: ImageView = itemView.findViewById(R.id.ivImagen)
+        val rvOpcionesLugar: RecyclerView = itemView.findViewById(R.id.rvOpcionesLugar)
+        val btnQuitarFavorito: ImageButton = itemView.findViewById(R.id.btnQuitarFavorito)
     }
 }
