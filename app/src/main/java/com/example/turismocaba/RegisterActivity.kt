@@ -1,5 +1,6 @@
 package com.example.turismocaba
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Button
@@ -69,8 +70,21 @@ class RegisterActivity : AppCompatActivity() {
 
             if (newRowId != -1L) {
                 Toast.makeText(this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show()
-                // Limpiar los campos después del registro exitoso
-                limpiarCampos(etNombre, etApellido, etEmail, etPais, etContrasena, etEquipoFutbol, etLibroFavorito)
+
+                // Guardar el email en SharedPreferences si es necesario
+                val sharedPreferences = getSharedPreferences("SesionUsuario", MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                editor.putString("email", email)
+                editor.putBoolean("sesionIniciada", true)
+                editor.apply()
+
+                // Redirigir a LoginActivity pasando la ID del usuario
+                val intent = Intent(this, LoginActivity::class.java).apply {
+                    putExtra("USER_ID", newRowId)  // Pasar la ID del usuario a la siguiente actividad
+                    putExtra("NOMBRE_USUARIO", nombre) // Pasar el nombre del usuario
+                }
+                startActivity(intent)
+                finish() // Cerrar la actividad actual para evitar volver atrás
             } else {
                 Toast.makeText(this, "Error al registrar el usuario", Toast.LENGTH_SHORT).show()
             }
@@ -127,7 +141,7 @@ class RegisterActivity : AppCompatActivity() {
         equipoFutbol: String,
         libroFavorito: String
     ): Boolean {
-        val regexLetras = Regex("^[a-zA-ZÀ-ÿ\\s]*$")
+        val regexLetras = Regex("^[a-zA-ZÀ-ÿ\\s]*$") // Acepta letras y espacios
         if (!regexLetras.matches(nombre)) {
             Toast.makeText(this, "El nombre no puede contener números", Toast.LENGTH_SHORT).show()
             return false
@@ -156,4 +170,3 @@ class RegisterActivity : AppCompatActivity() {
         return true
     }
 }
-
