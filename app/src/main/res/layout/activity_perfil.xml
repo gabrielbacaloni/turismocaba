@@ -71,7 +71,7 @@
             android:inputType="textPassword" />
     </LinearLayout>
 
-    <!-- Campo para la Pregunta de Seguridad 1 -->
+    <!-- Campo para la Respuesta Pregunta de Seguridad 1 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -80,17 +80,17 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pregunta de Seguridad 1"
+            android:text="Respuesta Pregunta de Seguridad 1"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
         <EditText
-            android:id="@+id/etPreguntaSeguridad1"
+            android:id="@+id/etRespuestaPregunta1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Modifique su primera pregunta de seguridad" />
+            android:hint="Ingrese su respuesta" />
     </LinearLayout>
 
-    <!-- Campo para la Pregunta de Seguridad 2 -->
+    <!-- Campo para la Respuesta Pregunta de Seguridad 2 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -99,14 +99,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pregunta de Seguridad 2"
+            android:text="Respuesta Pregunta de Seguridad 2"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
         <EditText
-            android:id="@+id/etPreguntaSeguridad2"
+            android:id="@+id/etRespuestaPregunta2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Modifique su segunda pregunta de seguridad" />
+            android:hint="Ingrese su respuesta" />
     </LinearLayout>
 
     <!-- Botón de Aceptar Cambios -->

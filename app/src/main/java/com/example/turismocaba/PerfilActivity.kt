@@ -1,6 +1,7 @@
 package com.example.turismocaba
 
 import android.content.Intent
+import android.util.Log
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -11,53 +12,30 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class PerfilActivity : AppCompatActivity() {
 
-    private var contrasenaActual = "password123" // Simulación de la contraseña actual
-    private var preguntaSeguridad1 = "¿Tu primera mascota?" // Pregunta de seguridad actual
-    private var preguntaSeguridad2 = "¿Tu lugar de nacimiento?" // Pregunta de seguridad actual
+    private var idUsuario: Int = -1 // ID del usuario
+    private lateinit var dbHelper: TurismoCABADBHelper // Instancia de la base de datos
+    private lateinit var nombreUsuario: String // Variable para almacenar el nombre del usuario
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_perfil)
 
+        // Obtener el nombre del usuario y el ID desde el Intent
+        nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Usuario no encontrado"
+        idUsuario = intent.getIntExtra("ID_USUARIO", -1)
+        Log.d("PerfilActivity", "ID del usuario: $idUsuario")
+
+        // Inicializar el helper de la base de datos
+        dbHelper = TurismoCABADBHelper(this)
+
         // Configurar BottomNavigationView
-        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
-        bottomNavigationView.selectedItemId = R.id.navigation_perfil
-
-        // Obtener el nombre del usuario desde el Intent
-        val nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Usuario no encontrado"
-
-        // Actualizar el título de la opción de perfil
-        bottomNavigationView.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
-
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_home -> {
-                    // Pasar el nombre de usuario a LoginActivity
-                    val intent = Intent(this, LoginActivity::class.java)
-                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
-                    startActivity(intent)
-                    finish() // Opcional: cerrar la actividad actual
-                    true
-                }
-                R.id.navigation_mis_lugares -> {
-                    // Pasar el nombre de usuario a MisLugaresActivity
-                    val intent = Intent(this, MisLugaresActivity::class.java)
-                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
-                    startActivity(intent)
-                    finish() // Opcional: cerrar la actividad actual
-                    true
-                }
-                R.id.navigation_perfil -> true // Ya estás en la pantalla de Perfil
-                else -> false
-            }
-        }
-
+        setupBottomNavigation()
 
         // Obtener referencias a los elementos de la UI
         val etContrasenaActual: EditText = findViewById(R.id.etContrasenaActual)
         val etNuevaContrasena: EditText = findViewById(R.id.etNuevaContrasena)
-        val etPreguntaSeguridad1: EditText = findViewById(R.id.etPreguntaSeguridad1)
-        val etPreguntaSeguridad2: EditText = findViewById(R.id.etPreguntaSeguridad2)
+        val etRespuestaPregunta1: EditText = findViewById(R.id.etRespuestaPregunta1)
+        val etRespuestaPregunta2: EditText = findViewById(R.id.etRespuestaPregunta2)
         val btnAceptarCambios: Button = findViewById(R.id.btnAceptarCambios)
         val btnCerrarSesion: Button = findViewById(R.id.btnCerrarSesion)
         val tvNombreUsuario: TextView = findViewById(R.id.tvNombreUsuario)
@@ -69,19 +47,33 @@ class PerfilActivity : AppCompatActivity() {
         btnAceptarCambios.setOnClickListener {
             val contrasenaIngresada = etContrasenaActual.text.toString()
             val nuevaContrasena = etNuevaContrasena.text.toString()
-            val nuevaPreguntaSeguridad1 = etPreguntaSeguridad1.text.toString()
-            val nuevaPreguntaSeguridad2 = etPreguntaSeguridad2.text.toString()
+            val respuesta1 = etRespuestaPregunta1.text.toString()
+            val respuesta2 = etRespuestaPregunta2.text.toString()
 
             // Validar campos de entrada
             if (contrasenaIngresada.isNotEmpty() && nuevaContrasena.isNotEmpty()) {
-                if (contrasenaIngresada == contrasenaActual) {
-                    // Actualizar la contraseña y las preguntas de seguridad
-                    contrasenaActual = nuevaContrasena
-                    preguntaSeguridad1 = nuevaPreguntaSeguridad1
-                    preguntaSeguridad2 = nuevaPreguntaSeguridad2
-                    Toast.makeText(this, "Cambios guardados", Toast.LENGTH_SHORT).show()
+                val usuario = dbHelper.obtenerUsuarioPorId(idUsuario)
+
+                if (usuario != null) {
+                    if (contrasenaIngresada == usuario.password) {
+                        // Validar las respuestas de seguridad
+                        if (respuesta1 == usuario.favoriteTeam && respuesta2 == usuario.favoriteBook) {
+                            // Actualizar la contraseña
+                            dbHelper.actualizarContrasena(usuario, nuevaContrasena)
+                            Toast.makeText(this, "Contraseña actualizada correctamente", Toast.LENGTH_SHORT).show()
+                            // Limpiar los campos
+                            etContrasenaActual.text.clear()
+                            etNuevaContrasena.text.clear()
+                            etRespuestaPregunta1.text.clear()
+                            etRespuestaPregunta2.text.clear()
+                        } else {
+                            Toast.makeText(this, "Respuestas de seguridad incorrectas", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(this, "Contraseña actual incorrecta", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
-                    Toast.makeText(this, "Contraseña actual incorrecta", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Usuario no encontrado", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 Toast.makeText(this, "Por favor, complete todos los campos", Toast.LENGTH_SHORT).show()
@@ -90,17 +82,39 @@ class PerfilActivity : AppCompatActivity() {
 
         // Manejar el botón de Cerrar Sesión
         btnCerrarSesion.setOnClickListener {
-            // Limpiar datos de sesión (si corresponde) aquí
-            // Redirigir a MainActivity
+            Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show() // Mensaje de cierre de sesión
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-            finish() // Cerrar la actividad actual
+            finish()
         }
     }
 
-    // Método para obtener el nombre del usuario utilizando TurismoCABADBHelper
-    private fun obtenerNombreUsuario(id: Int): String {
-        val dbHelper = TurismoCABADBHelper(this)
-        return dbHelper.obtenerNombreUsuario(id).also { dbHelper.close() } // Asegúrate de cerrar la conexión
+    private fun setupBottomNavigation() {
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+        bottomNavigationView.selectedItemId = R.id.navigation_perfil
+
+        // Actualizar el título de la opción de perfil
+        bottomNavigationView.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
+                    startActivity(intent)
+                    finish()
+                    true
+                }
+                R.id.navigation_mis_lugares -> {
+                    val intent = Intent(this, MisLugaresActivity::class.java)
+                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
+                    startActivity(intent)
+                    finish()
+                    true
+                }
+                R.id.navigation_perfil -> true // Ya estás en la pantalla de Perfil
+                else -> false
+            }
+        }
     }
 }

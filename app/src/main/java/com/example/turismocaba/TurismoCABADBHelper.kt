@@ -1,7 +1,9 @@
 package com.example.turismocaba
 
 import android.content.ContentValues
+import android.util.Log
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
@@ -99,8 +101,9 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
             put(COLUMN_PASSWORD, nuevaContrasena)
         }
 
-        val whereClause = "$COLUMN_EMAIL = ?"
-        val whereArgs = arrayOf(usuario.email)
+        // Cambiamos la cláusula WHERE para usar el ID del usuario
+        val whereClause = "$COLUMN_ID = ?"
+        val whereArgs = arrayOf(usuario.id.toString())
 
         val rowsUpdated = db.update(TABLE_USERS, values, whereClause, whereArgs)
 
@@ -160,29 +163,69 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         db.close()
         return deletedRows
     }
+    fun obtenerUsuarioPorCredenciales(email: String, password: String): Usuario? {
+        val db = this.readableDatabase
+        var cursor: Cursor? = null
+        return try {
+            cursor = db.query(
+                TABLE_USERS,
+                null,
+                "$COLUMN_EMAIL = ? AND $COLUMN_PASSWORD = ?",
+                arrayOf(email, password),
+                null, null, null
+            )
+
+            if (cursor != null && cursor.moveToFirst()) {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                val nombre = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE))
+                val apellido = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_APELLIDO))
+                val country = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COUNTRY))
+                val favoriteTeam = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_TEAM))
+                val favoriteBook = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_BOOK))
+
+                Usuario(id, nombre, apellido, email, country, password, favoriteTeam, favoriteBook)
+            } else {
+                null
+            }
+        } finally {
+            cursor?.close()
+            db.close()
+        }
+    }
+
 
     fun obtenerUsuarioPorEmail(email: String): Usuario? {
         val db = this.readableDatabase
-        val cursor = db.query(
-            TABLE_USERS,
-            null,
-            "$COLUMN_EMAIL = ?",
-            arrayOf(email),
-            null, null, null
-        )
+        var cursor: Cursor? = null
 
-        return if (cursor != null && cursor.moveToFirst()) {
-            val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
-            val nombre = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE))
-            val apellido = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_APELLIDO))
-            val country = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COUNTRY))
-            val password = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PASSWORD))
-            val favoriteTeam = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_TEAM))
-            val favoriteBook = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_BOOK))
+        Log.d("DBHelper", "Buscando usuario con email: $email")
 
-            Usuario(id, nombre, apellido, email, country, password, favoriteTeam, favoriteBook)
-        } else {
-            null
+        return try {
+            cursor = db.query(
+                TABLE_USERS,
+                null,
+                "$COLUMN_EMAIL = ?",
+                arrayOf(email),
+                null, null, null
+            )
+            Log.d("DBHelper", "Número de filas encontradas: ${cursor?.count}")
+
+            if (cursor != null && cursor.moveToFirst()) {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                val nombre = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE))
+                val apellido = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_APELLIDO))
+                val country = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COUNTRY))
+                val password = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PASSWORD))
+                val favoriteTeam = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_TEAM))
+                val favoriteBook = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_BOOK))
+
+                Usuario(id, nombre, apellido, email, country, password, favoriteTeam, favoriteBook)
+            } else {
+                Log.d("DBHelper", "No se encontró ningún usuario con ese email.")
+                null
+            }
+        } finally {
+            cursor?.close()
         }
     }
 
@@ -226,5 +269,33 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         db.close()
         return nombreUsuario
     }
+    fun obtenerUsuarioPorId(id: Int): Usuario? {
+        val db = this.readableDatabase
+        val cursor = db.query(
+            TABLE_USERS,
+            null,
+            "$COLUMN_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
+        )
+
+        return if (cursor != null && cursor.moveToFirst()) {
+            val email = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL))
+            val nombre = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE))
+            val apellido = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_APELLIDO))
+            val country = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COUNTRY))
+            val password = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PASSWORD))
+            val favoriteTeam = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_TEAM))
+            val favoriteBook = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAVORITE_BOOK))
+
+            Usuario(id, nombre, apellido, email, country, password, favoriteTeam, favoriteBook)
+        } else {
+            null
+        }.also {
+            cursor?.close()
+            db.close()
+        }
+    }
+
 
 }

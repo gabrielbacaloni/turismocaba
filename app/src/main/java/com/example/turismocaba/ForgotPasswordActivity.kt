@@ -7,7 +7,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import com.example.turismocaba.Usuario
 import androidx.appcompat.app.AppCompatActivity
 
 class ForgotPasswordActivity : AppCompatActivity() {
@@ -53,8 +52,10 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     dbHelper.actualizarContrasena(usuario, nuevaContrasena) // Pasar el objeto 'usuario' completo
                     Toast.makeText(this, "Contraseña restablecida con éxito", Toast.LENGTH_SHORT).show()
 
-                    // Navegar de regreso al login
-                    val intent = Intent(this, LoginActivity::class.java)
+                    // Redirigir a LoginActivity con el nombre del usuario
+                    val intent = Intent(this, LoginActivity::class.java).apply {
+                        putExtra("NOMBRE_USUARIO", usuario.nombre)  // Asumiendo que el objeto 'usuario' tiene un campo 'nombre'
+                    }
                     startActivity(intent)
                     finish()
                 } else {

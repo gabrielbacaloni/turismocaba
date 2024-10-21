@@ -1,6 +1,7 @@
 package com.example.turismocaba
 
 import android.Manifest
+import android.os.Build
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -48,9 +49,8 @@ class MisLugaresActivity : AppCompatActivity() {
         // Obtener el nombre del usuario desde el Intent
         nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Usuario"
 
-        // Configurar el nombre del usuario en la barra de navegación
-        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottomNavigationView)
-        bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+        // Configurar la navegación en la barra inferior
+        setupBottomNavigation()
 
         dbHelper = TurismoCABADBHelper(this)
 
@@ -65,29 +65,6 @@ class MisLugaresActivity : AppCompatActivity() {
         // Configurar el RecyclerView
         configurarRecyclerView(recyclerView, lugaresSeleccionados)
 
-        // Configurar la navegación en la barra inferior
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_home -> {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    true
-                }
-                R.id.navigation_mis_lugares -> {
-                    Toast.makeText(this, "Estás en Mis Lugares", Toast.LENGTH_SHORT).show()
-                    true
-                }
-                R.id.navigation_perfil -> {
-                    // Cambiar a la actividad de perfil con el nombre del usuario
-                    val intent = Intent(this, PerfilActivity::class.java).apply {
-                        putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario
-                    }
-                    startActivity(intent)
-                    true
-                }
-                else -> false
-            }
-        }
-
         // Inicializar el lanzador para la captura de fotos
         takePictureLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -101,38 +78,66 @@ class MisLugaresActivity : AppCompatActivity() {
         verificarPermisos()
     }
 
+    override fun onResume() {
+        super.onResume()
+        setupBottomNavigation() // Configurar la navegación en la barra inferior al reanudar la actividad
+    }
+
+    private fun setupBottomNavigation() {
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+        bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+
+        bottomNavigation.setOnItemSelectedListener { item ->
+            val destinationActivity = when (item.itemId) {
+                R.id.navigation_home -> LoginActivity::class.java
+                R.id.navigation_perfil -> PerfilActivity::class.java
+                else -> null // Asegúrate de que haya un valor por defecto
+            }
+
+            // Verifica que destinationActivity no sea null antes de crear el Intent
+            if (destinationActivity != null) {
+                val intent = Intent(this, destinationActivity)
+                intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
+                startActivity(intent)
+                finish()
+                true
+            } else {
+                Log.e("MisLugaresActivity", "Error: Activity de destino es null")
+                false // Retorna false si no hay un destino
+            }
+        }
+    }
+
+
     private fun verificarPermisos() {
         val permissions = mutableListOf<String>()
 
         // Verificar permiso para la cámara
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.CAMERA)
         }
 
-        // Verificar permiso para almacenamiento
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        // Verificar permisos para almacenamiento dependiendo de la versión de Android
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ requiere permisos específicos para imágenes
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        } else {
+            // Para versiones anteriores de Android
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
 
         // Solicitar permisos si son necesarios
         if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(
-                this,
-                permissions.toTypedArray(),
-                REQUEST_CODE_PERMISSIONS
-            )
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
         } else {
-            continuarConLaLogica()
+            continuarConLaLogica() // Llamar a la lógica si ya se tienen permisos
         }
     }
+
 
     private fun continuarConLaLogica() {
         // Aquí puedes continuar con la lógica que necesita el permiso
@@ -175,17 +180,20 @@ class MisLugaresActivity : AppCompatActivity() {
 
     private fun capturarFoto() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        // Verifica si hay una aplicación que pueda manejar el intent
         if (takePictureIntent.resolveActivity(packageManager) != null) {
             try {
-                val photoFile = createImageFile()
+                // Crear un archivo donde almacenar la imagen
+                val photoFile: File = createImageFile()
+                // Obtener la URI para el archivo de imagen
                 currentPhotoUri = FileProvider.getUriForFile(this, "${packageName}.provider", photoFile)
 
+                // Pasar la URI del archivo al intent
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri)
                 takePictureLauncher.launch(takePictureIntent)
             } catch (e: Exception) {
                 Log.e("MisLugaresActivity", "Error al abrir la cámara", e)
-                Toast.makeText(this, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(this, "No se pudo abrir la cámara", Toast.LENGTH_SHORT).show()
@@ -194,7 +202,7 @@ class MisLugaresActivity : AppCompatActivity() {
 
     private fun createImageFile(): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         return File.createTempFile("JPEG_$timestamp", ".jpg", storageDir).apply {
             Log.d("MisLugaresActivity", "Archivo de imagen creado: ${absolutePath}")
         }
@@ -252,10 +260,11 @@ class MisLugaresActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                continuarConLaLogica()
+                continuarConLaLogica() // Continuar solo si todos los permisos fueron concedidos
             } else {
-                Toast.makeText(this, "Permisos no concedidos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Se requieren permisos para usar esta funcionalidad.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
+
