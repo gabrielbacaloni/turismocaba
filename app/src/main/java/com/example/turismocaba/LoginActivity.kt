@@ -36,14 +36,78 @@ class LoginActivity : AppCompatActivity() {
 
         // Crear el listado de lugares con sus coordenadas
         val lugares = listOf(
-            LugarTuristico(1, "Obelisco", "Descripción del Obelisco", "Ubicación del Obelisco", R.mipmap.ic_obelisco, -34.6037, -58.3816),
-            LugarTuristico(2, "San Telmo", "Descripción de San Telmo", "Ubicación de San Telmo", R.mipmap.ic_santelmo, -34.6212, -58.3731),
-            LugarTuristico(3, "Caminito", "Descripción de Caminito", "Ubicación de Caminito", R.mipmap.ic_caminito, -34.6345, -58.3630),
-            LugarTuristico(4, "Calle Corrientes", "Descripción de Calle Corrientes", "Ubicación de Calle Corrientes", R.mipmap.ic_callecorrientes, -34.6035, -58.3820),
-            LugarTuristico(5, "Congreso", "Descripción de Congreso", "Ubicación del Congreso", R.mipmap.ic_congreso, -34.6090, -58.3928),
-            LugarTuristico(6, "La Casa Rosada", "Descripción de La Casa Rosada", "Ubicación de La Casa Rosada", R.mipmap.ic_lacasarosada, -34.6083, -58.3708),
-            LugarTuristico(7, "Sede Boyacá Independiente", "La sede de Independiente ubicada en la calle Boyacá", "Boyacá, Buenos Aires, Argentina", R.mipmap.ic_sedeindependiente, -34.6066, -58.4513),
-            LugarTuristico(8, "Puerto Madero", "Descripción de Puerto Madero", "Ubicación de Puerto Madero", R.mipmap.ic_puertomadero, -34.6114, -58.3624),
+            LugarTuristico(
+                1,
+                "Obelisco",
+                "Descripción del Obelisco",
+                "Ubicación del Obelisco",
+                R.mipmap.ic_obelisco,
+                -34.6037,
+                -58.3816
+            ),
+            LugarTuristico(
+                2,
+                "San Telmo",
+                "Descripción de San Telmo",
+                "Ubicación de San Telmo",
+                R.mipmap.ic_santelmo,
+                -34.6212,
+                -58.3731
+            ),
+            LugarTuristico(
+                3,
+                "Caminito",
+                "Descripción de Caminito",
+                "Ubicación de Caminito",
+                R.mipmap.ic_caminito,
+                -34.6345,
+                -58.3630
+            ),
+            LugarTuristico(
+                4,
+                "Calle Corrientes",
+                "Descripción de Calle Corrientes",
+                "Ubicación de Calle Corrientes",
+                R.mipmap.ic_callecorrientes,
+                -34.6035,
+                -58.3820
+            ),
+            LugarTuristico(
+                5,
+                "Congreso",
+                "Descripción de Congreso",
+                "Ubicación del Congreso",
+                R.mipmap.ic_congreso,
+                -34.6090,
+                -58.3928
+            ),
+            LugarTuristico(
+                6,
+                "La Casa Rosada",
+                "Descripción de La Casa Rosada",
+                "Ubicación de La Casa Rosada",
+                R.mipmap.ic_lacasarosada,
+                -34.6083,
+                -58.3708
+            ),
+            LugarTuristico(
+                7,
+                "Sede Boyacá Independiente",
+                "La sede de Independiente ubicada en la calle Boyacá",
+                "Boyacá, Buenos Aires, Argentina",
+                R.mipmap.ic_sedeindependiente,
+                -34.6066,
+                -58.4513
+            ),
+            LugarTuristico(
+                8,
+                "Puerto Madero",
+                "Descripción de Puerto Madero",
+                "Ubicación de Puerto Madero",
+                R.mipmap.ic_puertomadero,
+                -34.6114,
+                -58.3624
+            ),
         )
 
         // Cargar los lugares favoritos desde la base de datos
@@ -59,24 +123,38 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "Estás en Home", Toast.LENGTH_SHORT).show()
                     true
                 }
+
                 R.id.navigation_mis_lugares -> {
                     val intent = Intent(this, MisLugaresActivity::class.java).apply {
-                        putParcelableArrayListExtra("lugaresSeleccionados", ArrayList(lugaresFavoritos))
+                        putExtra(
+                            "NOMBRE_USUARIO",
+                            nombreUsuario
+                        ) // Pasar el nombre del usuario a MisLugaresActivity
+                        putParcelableArrayListExtra(
+                            "lugaresSeleccionados",
+                            ArrayList(lugaresFavoritos)
+                        )
                     }
                     startActivity(intent)
                     true
                 }
+
                 R.id.navigation_perfil -> {
                     val intent = Intent(this, PerfilActivity::class.java).apply {
-                        putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario a PerfilActivity
+                        putExtra(
+                            "NOMBRE_USUARIO",
+                            nombreUsuario
+                        ) // Pasar el nombre del usuario a PerfilActivity
                     }
                     startActivity(intent)
                     true
                 }
+
                 else -> false
             }
         }
     }
+
 
     private fun configurarRecyclerView(recyclerView: RecyclerView, lugares: List<LugarTuristico>) {
         lugaresAdapter = LugaresAdapter(lugares, lugaresFavoritos) { lugarFavorito ->

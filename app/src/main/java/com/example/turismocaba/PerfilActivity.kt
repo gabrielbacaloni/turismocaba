@@ -23,29 +23,26 @@ class PerfilActivity : AppCompatActivity() {
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
         bottomNavigationView.selectedItemId = R.id.navigation_perfil
 
-        // Obtener el ID del usuario desde el Intent
-        val idUsuario = intent.getIntExtra("USER_ID", -1)
-        val nombreUsuario = if (idUsuario != -1) {
-            obtenerNombreUsuario(idUsuario) // Obtener el nombre del usuario
-        } else {
-            "Usuario no encontrado" // Manejo de errores
-        }
+        // Obtener el nombre del usuario desde el Intent
+        val nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Usuario no encontrado"
 
         // Actualizar el título de la opción de perfil
         bottomNavigationView.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
 
-        // Manejar la selección de ítems en el BottomNavigationView
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
-                    // Redirigir al LoginActivity
+                    // Pasar el nombre de usuario a LoginActivity
                     val intent = Intent(this, LoginActivity::class.java)
+                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
                     startActivity(intent)
-                    finish() // Opcional: cerrar la actividad actual para evitar volver a ella
+                    finish() // Opcional: cerrar la actividad actual
                     true
                 }
                 R.id.navigation_mis_lugares -> {
+                    // Pasar el nombre de usuario a MisLugaresActivity
                     val intent = Intent(this, MisLugaresActivity::class.java)
+                    intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
                     startActivity(intent)
                     finish() // Opcional: cerrar la actividad actual
                     true
@@ -54,6 +51,7 @@ class PerfilActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
 
         // Obtener referencias a los elementos de la UI
         val etContrasenaActual: EditText = findViewById(R.id.etContrasenaActual)

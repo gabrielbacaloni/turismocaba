@@ -55,5 +55,4 @@ dependencies {
     implementation(libs.glide.transformations)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
 }

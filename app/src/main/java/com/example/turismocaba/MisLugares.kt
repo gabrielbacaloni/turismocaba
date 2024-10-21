@@ -39,14 +39,22 @@ class MisLugaresActivity : AppCompatActivity() {
         const val REQUEST_CODE_SELECT_IMAGE = 101
     }
 
+    private lateinit var nombreUsuario: String // Variable para almacenar el nombre del usuario
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mis_lugares)
 
+        // Obtener el nombre del usuario desde el Intent
+        nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Usuario"
+
+        // Configurar el nombre del usuario en la barra de navegación
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+        bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+
         dbHelper = TurismoCABADBHelper(this)
 
         val recyclerView: RecyclerView = findViewById(R.id.rvMisLugares)
-        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
 
         // Obtener la lista de lugares seleccionados desde el Intent
         val lugaresSeleccionados: ArrayList<LugarTuristico> =
@@ -58,7 +66,7 @@ class MisLugaresActivity : AppCompatActivity() {
         configurarRecyclerView(recyclerView, lugaresSeleccionados)
 
         // Configurar la navegación en la barra inferior
-        bottomNavigationView.setOnItemSelectedListener { item ->
+        bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
                     startActivity(Intent(this, LoginActivity::class.java))
@@ -69,7 +77,11 @@ class MisLugaresActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_perfil -> {
-                    startActivity(Intent(this, PerfilActivity::class.java))
+                    // Cambiar a la actividad de perfil con el nombre del usuario
+                    val intent = Intent(this, PerfilActivity::class.java).apply {
+                        putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario
+                    }
+                    startActivity(intent)
                     true
                 }
                 else -> false
@@ -99,6 +111,15 @@ class MisLugaresActivity : AppCompatActivity() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             permissions.add(Manifest.permission.CAMERA)
+        }
+
+        // Verificar permiso para almacenamiento
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
 
         // Solicitar permisos si son necesarios
@@ -230,15 +251,10 @@ class MisLugaresActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.isNotEmpty()) {
-                val deniedPermissions = permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_GRANTED }
-                if (deniedPermissions.isNotEmpty()) {
-                    Toast.makeText(this, "Los siguientes permisos fueron denegados: ${deniedPermissions.joinToString(", ")}", Toast.LENGTH_SHORT).show()
-                } else {
-                    continuarConLaLogica()
-                }
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                continuarConLaLogica()
             } else {
-                Toast.makeText(this, "No se otorgaron permisos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permisos no concedidos", Toast.LENGTH_SHORT).show()
             }
         }
     }

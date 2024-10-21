@@ -7,10 +7,10 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.turismocaba.TurismoCABADBHelper
-
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var dbHelper: TurismoCABADBHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         val tvTurismoCABA: TextView = findViewById(R.id.tvTurismoCABA)
 
         // Inicializar la base de datos
-        val dbHelper = TurismoCABADBHelper(this)
+        dbHelper = TurismoCABADBHelper(this)
 
         // Configurar el botón de inicio de sesión
         btnLogin.setOnClickListener {
@@ -35,36 +35,42 @@ class MainActivity : AppCompatActivity() {
             // Validar que los campos no estén vacíos
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Por favor, complete todos los campos", Toast.LENGTH_SHORT).show()
-            } else {
-                val db = dbHelper.readableDatabase
-                val query = "SELECT * FROM users WHERE email = ? AND password = ?"
-                val cursor = db.rawQuery(query, arrayOf(email, password))
-
-                if (cursor.moveToFirst()) {
-                    // Iniciar sesión exitoso
-                    Toast.makeText(this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
-                    // Redirigir a la actividad principal o HomeActivity
-                    val intent = Intent(this, LoginActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                } else {
-                    // Fallo de inicio de sesión
-                    Toast.makeText(this, "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show()
-                }
-                cursor.close()
+                return@setOnClickListener
             }
+
+            // Verificar las credenciales en la base de datos
+            val db = dbHelper.readableDatabase
+            val query = "SELECT * FROM ${TurismoCABADBHelper.TABLE_USERS} WHERE ${TurismoCABADBHelper.COLUMN_EMAIL} = ? AND ${TurismoCABADBHelper.COLUMN_PASSWORD} = ?"
+            val cursor = db.rawQuery(query, arrayOf(email, password))
+
+            if (cursor.moveToFirst()) {
+                // Iniciar sesión exitoso
+                Toast.makeText(this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+
+                // Obtener el nombre del usuario desde la base de datos
+                val nombreUsuario = cursor.getString(cursor.getColumnIndexOrThrow(TurismoCABADBHelper.COLUMN_NOMBRE))
+
+                // Redirigir a LoginActivity con el nombre del usuario
+                val intent = Intent(this, LoginActivity::class.java).apply {
+                    putExtra("NOMBRE_USUARIO", nombreUsuario)  // Pasar el nombre de usuario
+                }
+                startActivity(intent)
+                finish() // Finalizar la actividad actual para que no se pueda volver a ella
+            } else {
+                // Fallo de inicio de sesión
+                Toast.makeText(this, "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+            }
+            cursor.close()
         }
 
         // Configurar el botón de registro
         btnRegister.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
 
         // Configurar el botón de "Olvidé Contraseña"
         btnForgotPassword.setOnClickListener {
-            val intent = Intent(this, ForgotPasswordActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
 
         // Personalizar la interacción con otros elementos
