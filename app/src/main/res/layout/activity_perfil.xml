@@ -14,8 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="24dp"
-        android:text="Pantalla de Perfil"
+        android:layout_marginBottom="8dp"
+        android:text="BIENVENIDO"
         android:textSize="24sp"
         android:textColor="@color/text_primary"
         android:textStyle="bold" />
@@ -26,10 +26,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:text="Nombre de Usuario"
-        android:textSize="18sp"
+        android:textSize="22sp"
         android:textColor="@color/text_primary" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="16dp" />
 
     <!-- Campo para la Contraseña Actual -->
     <LinearLayout

@@ -2,13 +2,15 @@ package com.example.turismocaba
 
 import android.Manifest
 import android.os.Build
+import android.content.ContentValues
+import android.provider.MediaStore
+import android.os.Environment
+import java.util.*
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -16,13 +18,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
 
 class MisLugaresActivity : AppCompatActivity() {
 
@@ -124,8 +124,10 @@ class MisLugaresActivity : AppCompatActivity() {
                 permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
             }
         } else {
-            // Para versiones anteriores de Android
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // Para versiones anteriores a Android 10 (específicamente para escritura en almacenamiento externo)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
         }
@@ -183,14 +185,24 @@ class MisLugaresActivity : AppCompatActivity() {
         // Verifica si hay una aplicación que pueda manejar el intent
         if (takePictureIntent.resolveActivity(packageManager) != null) {
             try {
-                // Crear un archivo donde almacenar la imagen
-                val photoFile: File = createImageFile()
-                // Obtener la URI para el archivo de imagen
-                currentPhotoUri = FileProvider.getUriForFile(this, "${packageName}.provider", photoFile)
+                // Guardar la imagen en la galería
+                val resolver = contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, "JPEG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
 
-                // Pasar la URI del archivo al intent
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri)
-                takePictureLauncher.launch(takePictureIntent)
+                val imageUri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+                if (imageUri != null) {
+                    currentPhotoUri = imageUri
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+                    takePictureLauncher.launch(takePictureIntent)
+                } else {
+                    Toast.makeText(this, "No se pudo guardar la imagen en la galería", Toast.LENGTH_SHORT).show()
+                }
+
             } catch (e: Exception) {
                 Log.e("MisLugaresActivity", "Error al abrir la cámara", e)
                 Toast.makeText(this, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -200,14 +212,14 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 
+
     private fun createImageFile(): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES) // Cambiado a getExternalFilesDir()
         return File.createTempFile("JPEG_$timestamp", ".jpg", storageDir).apply {
             Log.d("MisLugaresActivity", "Archivo de imagen creado: ${absolutePath}")
         }
     }
-
     private fun mostrarCalendario() {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)

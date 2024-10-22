@@ -1,6 +1,7 @@
 package com.example.turismocaba
 
 import android.content.Intent
+import android.util.Log
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -49,10 +50,19 @@ class MainActivity : AppCompatActivity() {
 
                 // Obtener el nombre del usuario desde la base de datos
                 val nombreUsuario = cursor.getString(cursor.getColumnIndexOrThrow(TurismoCABADBHelper.COLUMN_NOMBRE))
+                val idUsuario = cursor.getInt(cursor.getColumnIndexOrThrow(TurismoCABADBHelper.COLUMN_ID))
+
+                // Guardar el ID del usuario en SharedPreferences
+                val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
+                sharedPreferences.edit().putInt("ID_USUARIO", idUsuario).apply()
+
+                // Log para depuración
+                Log.d("MainActivity", "ID del usuario guardado: $idUsuario")
 
                 // Redirigir a LoginActivity con el nombre del usuario
                 val intent = Intent(this, LoginActivity::class.java).apply {
-                    putExtra("NOMBRE_USUARIO", nombreUsuario)  // Pasar el nombre de usuario
+                    putExtra("NOMBRE_USUARIO", nombreUsuario)
+                    putExtra("ID_USUARIO", idUsuario)
                 }
                 startActivity(intent)
                 finish() // Finalizar la actividad actual para que no se pueda volver a ella
@@ -60,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 // Fallo de inicio de sesión
                 Toast.makeText(this, "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show()
             }
+
             cursor.close()
         }
 

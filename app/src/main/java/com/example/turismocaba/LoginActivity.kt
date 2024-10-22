@@ -30,8 +30,18 @@ class LoginActivity : AppCompatActivity() {
 
         // Recibir el nombre del usuario desde el Intent
         val nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Perfil"
-        val sharedPreferences = getSharedPreferences("myPrefs", MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
         sharedPreferences.edit().putString("NOMBRE_USUARIO", nombreUsuario).apply()
+
+        // Obtener el ID del usuario desde SharedPreferences
+        val idUsuario = sharedPreferences.getInt("ID_USUARIO", -1) // Recuperar el ID del usuario
+
+        // Log para verificar el ID del usuario
+        Log.d("LoginActivity", "ID del usuario: $idUsuario")
+
+        // Obtener el usuario desde la base de datos usando el ID
+        val dbHelper = TurismoCABADBHelper(this)
+        val usuario = dbHelper.obtenerUsuarioPorId(idUsuario) // Asegúrate de que este método esté bien implementado
 
         // Configurar el nombre del usuario en la barra de navegación
         bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
@@ -70,14 +80,6 @@ class LoginActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_perfil -> {
-                    // Obtener el ID del usuario desde la base de datos
-                    val dbHelper = TurismoCABADBHelper(this)
-                    val usuario = dbHelper.obtenerUsuarioPorEmail(nombreUsuario) // Asegúrate de que este método esté bien implementado
-                    val idUsuario = usuario?.id ?: -1 // Obtén el ID del usuario
-
-                    // Log para verificar el ID del usuario
-                    Log.d("LoginActivity", "ID del usuario: $idUsuario")
-
                     val intent = Intent(this, PerfilActivity::class.java).apply {
                         putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario a PerfilActivity
                         putExtra("ID_USUARIO", idUsuario) // Pasar el ID del usuario
