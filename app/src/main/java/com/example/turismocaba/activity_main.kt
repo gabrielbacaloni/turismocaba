@@ -54,7 +54,9 @@ class MainActivity : AppCompatActivity() {
 
                 // Guardar el ID del usuario en SharedPreferences
                 val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
-                sharedPreferences.edit().putInt("ID_USUARIO", idUsuario).apply()
+                sharedPreferences.edit()
+                    .putInt("ID_USUARIO", idUsuario)
+                    .putString("NOMBRE_USUARIO", nombreUsuario).apply()
 
                 // Log para depuración
                 Log.d("MainActivity", "ID del usuario guardado: $idUsuario")

@@ -95,7 +95,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Obtener el nombre del usuario desde SharedPreferences
-        val sharedPreferences = getSharedPreferences("myPrefs", MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
         val nombreUsuario = sharedPreferences.getString("NOMBRE_USUARIO", "Usuario") ?: "Usuario"
 
         // Actualizar el nombre del usuario en la barra de navegación
