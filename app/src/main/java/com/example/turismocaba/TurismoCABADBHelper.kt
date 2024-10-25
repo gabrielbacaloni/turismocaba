@@ -29,9 +29,9 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         const val COLUMN_LUGAR_LONGITUD = "lugar_longitud"
         const val COLUMN_DESCRIPCION = "descripcion"
         const val COLUMN_UBICACION = "ubicacion"
-        const val COLUMN_FAVORITO = "favorito"
-        const val COLUMN_IS_SELECTED = "isSelected"
         const val COLUMN_FECHA_VISITA = "fecha_visita"
+        const val COLUMN_ID_USUARIO = "id_usuario"
+        const val COLUMN_ID_USER_FAV ="id_user_fav"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -57,9 +57,11 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
                 $COLUMN_LUGAR_LONGITUD REAL,
                 $COLUMN_FECHA_VISITA TEXT,
                 $COLUMN_DESCRIPCION TEXT,
-                $COLUMN_UBICACION TEXT,    
-                $COLUMN_FAVORITO INTEGER,    
-                $COLUMN_IS_SELECTED INTEGER  
+                $COLUMN_UBICACION TEXT,
+                $COLUMN_ID_USUARIO INTEGER,
+                $COLUMN_ID_USER_FAV INTEGER,
+                FOREIGN KEY ($COLUMN_ID_USER_FAV) REFERENCES $TABLE_USERS($COLUMN_ID)   
+            
             )
         """.trimIndent()
 
@@ -74,26 +76,23 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         }
     }
 
-    fun insertarLugarFavorito(lugar: LugarTuristico): Long {
-        val db = this.writableDatabase
-
-        val contentValues = ContentValues().apply {
+    fun insertarLugarFavorito(idUsuario: Int, lugar: LugarTuristico): Long {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_ID_USER_FAV, idUsuario) /* ID del usuario */
+            put(COLUMN_ID_USUARIO, lugar.id) /* ID del lugar */
             put(COLUMN_LUGAR_NOMBRE, lugar.nombre)
-            put(COLUMN_DESCRIPCION, lugar.descripcion)
-            put(COLUMN_UBICACION, lugar.ubicacion)
             put(COLUMN_LUGAR_IMAGEN, lugar.imagen)
             put(COLUMN_LUGAR_LATITUD, lugar.latitud)
             put(COLUMN_LUGAR_LONGITUD, lugar.longitud)
-            put(COLUMN_FAVORITO, if (lugar.favorito) 1 else 0)
-            put(COLUMN_IS_SELECTED, if (lugar.isSelected) 1 else 0)
             put(COLUMN_FECHA_VISITA, lugar.fechaVisita)
+            put(COLUMN_DESCRIPCION, lugar.descripcion)
+            put(COLUMN_UBICACION, lugar.ubicacion)
         }
-
-        val result = db.insert(TABLE_FAVORITOS, null, contentValues)
+        val result = db.insert(TABLE_FAVORITOS, null, values)
         db.close()
         return result
     }
-
     fun actualizarContrasena(usuario: Usuario, nuevaContrasena: String) {
         val db = this.writableDatabase
 
@@ -116,30 +115,31 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         db.close()
     }
 
-    fun obtenerTodosLosLugaresFavoritos(): List<LugarTuristico> {
+    fun obtenerLugaresFavoritos(idUsuario: Int): List<LugarTuristico> {
+        val db = readableDatabase
         val lugaresFavoritos = mutableListOf<LugarTuristico>()
-        val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT $COLUMN_ID, $COLUMN_LUGAR_NOMBRE, $COLUMN_LUGAR_IMAGEN, $COLUMN_LUGAR_LATITUD, $COLUMN_LUGAR_LONGITUD, $COLUMN_FECHA_VISITA FROM $TABLE_FAVORITOS", null)
-
-        if (cursor.moveToFirst()) {
-            do {
-                val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID))
-                val nombre = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LUGAR_NOMBRE))
-                val imagenId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_LUGAR_IMAGEN))
-                val latitud = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LUGAR_LATITUD))
-                val longitud = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LUGAR_LONGITUD))
-                val fechaVisita = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FECHA_VISITA))
-
-                // Aquí creas el objeto LugarTuristico
-                val lugar = LugarTuristico(id.toInt(), nombre, "", "", imagenId, latitud, longitud)
-                lugar.fechaVisita = fechaVisita
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_FAVORITOS WHERE $COLUMN_ID_USER_FAV = ?", arrayOf(idUsuario.toString()))
+        with(cursor) {
+            while (moveToNext()) {
+                val lugar = LugarTuristico(
+                    id = getInt(getColumnIndexOrThrow(COLUMN_ID_USUARIO)),
+                    nombre = getString(getColumnIndexOrThrow(COLUMN_LUGAR_NOMBRE)),
+                    descripcion = getString(getColumnIndexOrThrow(COLUMN_DESCRIPCION)),
+                    ubicacion = getString(getColumnIndexOrThrow(COLUMN_UBICACION)),
+                    imagen = getInt(getColumnIndexOrThrow(COLUMN_LUGAR_IMAGEN)),
+                    latitud = getDouble(getColumnIndexOrThrow(COLUMN_LUGAR_LATITUD)),
+                    longitud = getDouble(getColumnIndexOrThrow(COLUMN_LUGAR_LONGITUD)),
+                    fechaVisita = getString(getColumnIndexOrThrow(COLUMN_FECHA_VISITA))
+                )
                 lugaresFavoritos.add(lugar)
-            } while (cursor.moveToNext())
+            }
         }
         cursor.close()
         db.close()
         return lugaresFavoritos
     }
+
+
 
     private fun obtenerIdRecursoPorNombre(nombreImagen: String): Int {
         return when (nombreImagen) {
@@ -155,14 +155,15 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         }
     }
 
-    fun eliminarLugarFavorito(id: Long): Int {
+    fun eliminarLugarFavorito(idUsuario: Int, idLugar: Int): Int {
         val db = this.writableDatabase
-        val whereClause = "$COLUMN_ID = ?"
-        val whereArgs = arrayOf(id.toString())
+        val whereClause = "$COLUMN_ID_USER_FAV = ? AND $COLUMN_ID_USUARIO = ?" /* ID del usuario e ID del lugar */
+        val whereArgs = arrayOf(idUsuario.toString(), idLugar.toString())
         val deletedRows = db.delete(TABLE_FAVORITOS, whereClause, whereArgs)
         db.close()
         return deletedRows
     }
+
     fun obtenerUsuarioPorCredenciales(email: String, password: String): Usuario? {
         val db = this.readableDatabase
         var cursor: Cursor? = null
@@ -296,6 +297,15 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
             db.close()
         }
     }
-
+    fun verificarLugarEnFavoritos(idUsuario: Int, idLugar: Int): Boolean {
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_FAVORITOS WHERE $COLUMN_ID_USER_FAV = ? AND $COLUMN_ID_USUARIO = ?" /* ID del usuario e ID del lugar */
+        val cursor = db.rawQuery(query, arrayOf(idUsuario.toString(), idLugar.toString()))
+        val existe = cursor.count > 0
+        cursor.close()
+        return existe
+    }
 
 }
+
+

@@ -14,11 +14,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.example.turismocaba.MisLugaresAdapter.MisLugaresViewHolder
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var lugaresAdapter: LugaresAdapter
+    private lateinit var TurismoCABADBHelper: TurismoCABADBHelper
+    private lateinit var lugaresAdapter: MisLugaresAdapter
     private val lugaresFavoritos = mutableListOf<LugarTuristico>()  // Lista mutable
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
 
         val recyclerView: RecyclerView = findViewById(R.id.rvLugares)
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
+
+        TurismoCABADBHelper = TurismoCABADBHelper(this)
 
         // Recibir el nombre del usuario desde el Intent
         val nombreUsuario = intent.getStringExtra("NOMBRE_USUARIO") ?: "Perfil"
@@ -57,12 +62,11 @@ class LoginActivity : AppCompatActivity() {
             LugarTuristico(7, "Sede Boyacá Independiente", "La sede de Independiente ubicada en la calle Boyacá", "Boyacá, Buenos Aires, Argentina", R.mipmap.ic_sedeindependiente, -34.6066, -58.4513),
             LugarTuristico(8, "Puerto Madero", "Descripción de Puerto Madero", "Ubicación de Puerto Madero", R.mipmap.ic_puertomadero, -34.6114, -58.3624)
         )
-
         // Cargar los lugares favoritos desde la base de datos
-        cargarLugaresFavoritos()
+        cargarLugaresFavoritos(idUsuario)
 
         // Configurar RecyclerView
-        configurarRecyclerView(recyclerView, lugares)
+        configurarRecyclerView(recyclerView, lugares, idUsuario)
 
         // Configurar el BottomNavigationView
         bottomNavigation.setOnNavigationItemSelectedListener { item ->
@@ -71,22 +75,34 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "Estás en Home", Toast.LENGTH_SHORT).show()
                     true
                 }
+
                 R.id.navigation_mis_lugares -> {
                     val intent = Intent(this, MisLugaresActivity::class.java).apply {
-                        putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario a MisLugaresActivity
-                        putParcelableArrayListExtra("lugaresSeleccionados", ArrayList(lugaresFavoritos))
+                        putExtra(
+                            "NOMBRE_USUARIO",
+                            nombreUsuario
+                        ) // Pasar el nombre del usuario a MisLugaresActivity
+                        putParcelableArrayListExtra(
+                            "lugaresSeleccionados",
+                            ArrayList(lugaresFavoritos)
+                        )
                     }
                     startActivity(intent)
                     true
                 }
+
                 R.id.navigation_perfil -> {
                     val intent = Intent(this, PerfilActivity::class.java).apply {
-                        putExtra("NOMBRE_USUARIO", nombreUsuario) // Pasar el nombre del usuario a PerfilActivity
+                        putExtra(
+                            "NOMBRE_USUARIO",
+                            nombreUsuario
+                        ) // Pasar el nombre del usuario a PerfilActivity
                         putExtra("ID_USUARIO", idUsuario) // Pasar el ID del usuario
                     }
                     startActivity(intent)
                     true
                 }
+
                 else -> false
             }
         }
@@ -103,86 +119,146 @@ class LoginActivity : AppCompatActivity() {
         bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
     }
 
-    private fun configurarRecyclerView(recyclerView: RecyclerView, lugares: List<LugarTuristico>) {
-        lugaresAdapter = LugaresAdapter(lugares, lugaresFavoritos) { lugarFavorito ->
-            agregarLugarAFavoritos(lugarFavorito)
-        }
+    private fun configurarRecyclerView(
+        recyclerView: RecyclerView,
+        lugares: List<LugarTuristico>,
+        idUsuario: Int
+    ) {
+        lugaresAdapter = MisLugaresAdapter(
+            idUsuario,
+            TurismoCABADBHelper,
+            lugares,
+            { lugar, opcionTipo ->
+                // No se hace nada con las opciones en LoginActivity
+            },
+            { lugar ->
+                // No se hace nada con "Quitar favorito" en LoginActivity
+            }, false // esMisLugaresActivity (false porque estamos en LoginActivity)
+        )
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = lugaresAdapter
     }
 
-    private fun agregarLugarAFavoritos(lugar: LugarTuristico) {
-        if (!lugaresFavoritos.contains(lugar)) {
-            // Agregar lugar a la lista mutable
-            lugaresFavoritos.add(lugar)
+    private fun obtenerLugaresFavoritos(lugar: LugarTuristico, idUsuario: Int) {
+        if (idUsuario != -1) {
+            val lugarYaEnFavoritos =
+                TurismoCABADBHelper.verificarLugarEnFavoritos(idUsuario, lugar.id)
 
-            // Notificar al adaptador que los datos han cambiado
-            lugaresAdapter.notifyDataSetChanged() // Usar notifyDataSetChanged() en lugar de notifyItemChanged()
+            if (!lugarYaEnFavoritos) {
+                lugaresFavoritos.add(lugar)
+                lugaresAdapter.notifyDataSetChanged()
 
-            // Guardar lugar en la base de datos
-            val dbHelper = TurismoCABADBHelper(this)
+                val lugarConFecha = lugar.copy(
+                    fechaVisita = lugar.fechaVisita ?: System.currentTimeMillis().toString()
+                )
+                TurismoCABADBHelper.insertarLugarFavorito(idUsuario, lugarConFecha)
 
-            // Asignar la fecha de visita si no está presente (usando la fecha y hora actual)
-            val lugarConFecha = lugar.copy(fechaVisita = lugar.fechaVisita ?: System.currentTimeMillis().toString())
-
-            // Llamar al método de la base de datos para insertar el lugar con fecha de visita
-            dbHelper.insertarLugarFavorito(lugarConFecha)
-
-            Toast.makeText(this, "${lugar.nombre} agregado a Mis Lugares", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "${lugar.nombre} agregado a Mis Lugares", Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(this, "${lugar.nombre} ya está en Mis Lugares", Toast.LENGTH_SHORT)
+                    .show()
+            }
         } else {
-            Toast.makeText(this, "${lugar.nombre} ya está en Mis Lugares", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Error al guardar favorito. ID de usuario no encontrado",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    private fun cargarLugaresFavoritos() {
-        val dbHelper = TurismoCABADBHelper(this)
-        lugaresFavoritos.clear()
-        lugaresFavoritos.addAll(dbHelper.obtenerTodosLosLugaresFavoritos())  // Método para obtener favoritos desde la DB
+    private fun cargarLugaresFavoritos(idUsuario: Int) {
+        if (idUsuario != -1) {
+            lugaresFavoritos.clear()
+            lugaresFavoritos.addAll(TurismoCABADBHelper.obtenerLugaresFavoritos(idUsuario))
+        } else {
+            Toast.makeText(
+                this,
+                "Error al cargar lugares favoritos. ID de usuario no encontrado",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
-    class LugaresAdapter(
-        private val lugares: List<LugarTuristico>,
-        private val lugaresFavoritos: MutableList<LugarTuristico>,  // Lista mutable para que se pueda modificar
-        private val onLugarFavoritoClick: (LugarTuristico) -> Unit
-    ) : RecyclerView.Adapter<LugaresAdapter.LugaresViewHolder>() {
+    class MisLugaresAdapter(
+        private val idUsuario: Int,
+        private val TurismoCABADBHelper: TurismoCABADBHelper,
+        private val lugaresFavoritos: List<LugarTuristico>,
+        private val onOpcionClick: (LugarTuristico, OpcionTipo) -> Unit,
+        private val onQuitarFavoritoClick: (LugarTuristico) -> Unit,
+        private val esMisLugaresActivity: Boolean
+    ) : RecyclerView.Adapter<MisLugaresAdapter.MisLugaresViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LugaresViewHolder {
+        private val lugaresMutable = lugaresFavoritos.toMutableList()
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MisLugaresViewHolder {
             val layoutInflater = LayoutInflater.from(parent.context)
-            val view = layoutInflater.inflate(R.layout.item_lugar, parent, false)
-            return LugaresViewHolder(view)
+            val view = layoutInflater.inflate(
+                R.layout.item_lugar_favorito,
+                parent,
+                false
+            ) // Usar el layout correcto para LoginActivity
+            return MisLugaresViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: LugaresViewHolder, position: Int) {
-            val lugar = lugares[position]
+        override fun onBindViewHolder(holder: MisLugaresViewHolder, position: Int) {
+            val lugar = lugaresMutable[position]
 
+            // Configurar el nombre del lugar
             holder.tvNombreLugar.text = lugar.nombre
 
+            // Cargar la imagen
             Glide.with(holder.itemView.context)
-                .load(lugar.imagen)  // Usar directamente el ID de recurso de la imagen
+                .load(lugar.imagen)
+                .transform(CircleCrop())
                 .into(holder.imagenImageView)
 
-            holder.btnAgregarFavorito.setImageResource(
-                if (lugaresFavoritos.contains(lugar)) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
-            )
+            val estaEnFavoritos = TurismoCABADBHelper.verificarLugarEnFavoritos(idUsuario, lugar.id)
 
-            holder.btnAgregarFavorito.setOnClickListener {
-                onLugarFavoritoClick(lugar)
+            // Mostrar el botón de favoritos y configurar su estado
+            holder.btnQuitarFavorito.visibility =
+                View.VISIBLE // Asegurarse de que el botón sea visible
+            holder.btnQuitarFavorito.setImageResource(if (estaEnFavoritos) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border)
 
-                // Cambiar el icono del botón según si el lugar está o no en favoritos
-                holder.btnAgregarFavorito.setImageResource(
-                    if (lugaresFavoritos.contains(lugar)) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+            // Manejar el click en el botón de favoritos
+            holder.btnQuitarFavorito.setOnClickListener {
+                if (estaEnFavoritos) {
+                    // Quitar de favoritos
+                    TurismoCABADBHelper.eliminarLugarFavorito(idUsuario, lugar.id)
+                    lugaresMutable.remove(lugar)
+                    notifyItemRemoved(position)
+                    notifyItemRangeChanged(position, lugaresMutable.size)
+                } else {
+                    // Agregar a favoritos
+                    TurismoCABADBHelper.insertarLugarFavorito(
+                        idUsuario,
+                        lugar.copy(fechaVisita = System.currentTimeMillis().toString())
+                    )
+                    lugaresMutable.add(lugar)
+                    notifyItemInserted(lugaresMutable.size - 1)
+                }
+
+                // Actualizar el icono del botón
+                holder.btnQuitarFavorito.setImageResource(
+                    if (TurismoCABADBHelper.verificarLugarEnFavoritos(
+                            idUsuario,
+                            lugar.id
+                        )
+                    ) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
                 )
             }
         }
 
+
         override fun getItemCount(): Int {
-            return lugares.size
+            return lugaresMutable.size
         }
 
-        class LugaresViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        class MisLugaresViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val tvNombreLugar: TextView = itemView.findViewById(R.id.tvNombreLugar)
-            val btnAgregarFavorito: ImageButton = itemView.findViewById(R.id.btnAgregarFavorito)
             val imagenImageView: ImageView = itemView.findViewById(R.id.ivImagen)
+            val btnQuitarFavorito: ImageButton = itemView.findViewById(R.id.btnQuitarFavorito)
         }
     }
 }

@@ -18,7 +18,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -27,6 +26,7 @@ import java.text.SimpleDateFormat
 
 class MisLugaresActivity : AppCompatActivity() {
 
+    private var lugares: ArrayList<LugarTuristico> = arrayListOf()
     private lateinit var lugaresAdapter: MisLugaresAdapter
     private lateinit var dbHelper: TurismoCABADBHelper
     private var currentLugar: LugarTuristico? = null
@@ -55,16 +55,18 @@ class MisLugaresActivity : AppCompatActivity() {
 
         dbHelper = TurismoCABADBHelper(this)
 
-        val recyclerView: RecyclerView = findViewById(R.id.rvMisLugares)
+        val recyclerView: RecyclerView = findViewById(R.id.recyclerViewMisLugares)
 
-        // Obtener la lista de lugares seleccionados desde el Intent
-        val lugaresSeleccionados: ArrayList<LugarTuristico> =
-            intent.extras?.getParcelableArrayList("lugaresSeleccionados") ?: arrayListOf()
+        // Obtener el ID del usuario logueado (puedes implementar el método obtenerIdUsuarioActual)
+        val idUsuario = obtenerIdUsuarioActual()
 
-        Log.d("MisLugaresActivity", "Lugares seleccionados: $lugaresSeleccionados")
+        // Obtener los lugares favoritos del usuario desde la base de datos
+        val lugaresFavoritos = dbHelper.obtenerLugaresFavoritos(idUsuario)
+        lugares.addAll(lugaresFavoritos) // Añadir los lugares recuperados a la lista 'lugares'
+        Log.d("MisLugares", "Lugares favoritos recuperados: ${lugares.size}") // Ahora mostrará el tamaño correcto
 
         // Configurar el RecyclerView
-        configurarRecyclerView(recyclerView, lugaresSeleccionados)
+        configurarRecyclerView(recyclerView, lugares, idUsuario, TurismoCABADBHelper(this))
 
         // Inicializar el lanzador para la captura de fotos
         takePictureLauncher =
@@ -74,14 +76,29 @@ class MisLugaresActivity : AppCompatActivity() {
                     mostrarCalendario() // Mostrar calendario después de capturar la foto
                 }
             }
-
-        // Verificar y solicitar permisos para acceder a la cámara y fotos
-        verificarPermisos()
     }
 
     override fun onResume() {
         super.onResume()
-        setupBottomNavigation() // Configurar la navegación en la barra inferior al reanudar la actividad
+        setupBottomNavigation()
+
+        // Limpiar la lista de lugares antes de cargar nuevos datos
+        lugares.clear()
+
+        // Obtener el ID del usuario actual
+        val idUsuario = obtenerIdUsuarioActual()
+
+        // Recuperar todos los lugares favoritos del usuario
+        val lugaresFavoritos = dbHelper.obtenerLugaresFavoritos(idUsuario)
+
+        // Añadir los lugares favoritos a la lista 'lugares'
+        lugares.addAll(lugaresFavoritos)
+
+        // Notificar cambios al adaptador
+        lugaresAdapter.notifyDataSetChanged()
+
+        // Log para verificar el número de lugares favoritos recuperados
+        Log.d("MisLugares", "Lugares favoritos recuperados: ${lugares.size}")
     }
 
     private fun setupBottomNavigation() {
@@ -95,7 +112,6 @@ class MisLugaresActivity : AppCompatActivity() {
                 else -> null // Asegúrate de que haya un valor por defecto
             }
 
-            // Verifica que destinationActivity no sea null antes de crear el Intent
             if (destinationActivity != null) {
                 val intent = Intent(this, destinationActivity)
                 intent.putExtra("NOMBRE_USUARIO", nombreUsuario)
@@ -104,50 +120,21 @@ class MisLugaresActivity : AppCompatActivity() {
                 true
             } else {
                 Log.e("MisLugaresActivity", "Error: Activity de destino es null")
-                false // Retorna false si no hay un destino
+                false
             }
         }
     }
 
-
-    private fun verificarPermisos() {
-        val permissions = mutableListOf<String>()
-
-        // Verificar permiso para la cámara
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.CAMERA)
-        }
-
-        // Verificar permisos para almacenamiento dependiendo de la versión de Android
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ requiere permisos específicos para imágenes
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
-                permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
-            }
-        } else {
-            // Para versiones anteriores a Android 10 (específicamente para escritura en almacenamiento externo)
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-                }
-            }
-        // Solicitar permisos si son necesarios
-        if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
-        } else {
-            continuarConLaLogica() // Llamar a la lógica si ya se tienen permisos
-        }
-    }
-
-
-    private fun continuarConLaLogica() {
-        // Aquí puedes continuar con la lógica que necesita el permiso
-    }
-
-    private fun configurarRecyclerView(recyclerView: RecyclerView, lugares: List<LugarTuristico>) {
+    private fun configurarRecyclerView(
+        recyclerView: RecyclerView,
+        lugaresFavoritos: List<LugarTuristico>,
+        idUsuario:Int,
+        turismoCABADBHelper: TurismoCABADBHelper
+    ) {
         lugaresAdapter = MisLugaresAdapter(
-            lugares,
+            idUsuario, // ID del usuario
+            turismoCABADBHelper, // Instancia de TurismoCABADBHelper
+            lugaresFavoritos,
             onOpcionClick = { lugar, opcionTipo ->
                 when (opcionTipo) {
                     OpcionTipo.UBICACION -> lugar.abrirEnGoogleMaps(this)
@@ -165,27 +152,38 @@ class MisLugaresActivity : AppCompatActivity() {
                     }
                 }
             },
-            onQuitarFavoritoClick = { lugar ->
-                Toast.makeText(
-                    this,
-                    "Lugar eliminado de favoritos: ${lugar.nombre}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                // Lógica para eliminar el lugar de favoritos en la base de datos
-                dbHelper.eliminarLugarFavorito(lugar.id.toLong()) // Asegúrate de convertir id a Long
-            }
+            onQuitarFavoritoClick = { lugar -> quitarFavorito(lugar) },
+            esMisLugaresActivity = true // Indica que estamos en MisLugaresActivity
         )
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = lugaresAdapter
     }
 
+    // Método para eliminar un lugar de favoritos
+    private fun quitarFavorito(lugar: LugarTuristico) {
+        val idUsuario = obtenerIdUsuarioActual() // Obtén el id del usuario
+        val deletedRows = dbHelper.eliminarLugarFavorito(idUsuario, lugar.id) // Pasamos ambos IDs como Int
+
+        if (deletedRows > 0) { // Verifica si se eliminó alguna fila
+            Toast.makeText(this, "${lugar.nombre} ha sido eliminado de tus favoritos", Toast.LENGTH_SHORT).show()
+            // ... resto del código ...
+        } else {
+            Toast.makeText(this, "Error al eliminar de favoritos",Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Resto de métodos como capturarFoto, mostrarCalendario, seleccionarImagen, etc.
+
     private fun capturarFoto() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        // Verifica si hay una aplicación que pueda manejar el intent
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_PERMISSIONS)
+            return
+        }
+
         if (takePictureIntent.resolveActivity(packageManager) != null) {
             try {
-                // Guardar la imagen en la galería
                 val resolver = contentResolver
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, "JPEG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
@@ -210,15 +208,6 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun createImageFile(): File {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile("JPEG_$timestamp", ".jpg", storageDir).apply {
-            Log.d("MisLugaresActivity", "Archivo de imagen creado: ${absolutePath}")
-        }
-    }
-
     private fun mostrarCalendario() {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
@@ -228,22 +217,46 @@ class MisLugaresActivity : AppCompatActivity() {
         val datePickerDialog = DatePickerDialog(this, { _, year, monthOfYear, dayOfMonth ->
             val fechaSeleccionada = "$dayOfMonth/${monthOfYear + 1}/$year"
             currentLugar?.let {
-                guardarLugarEnBaseDeDatos(it, currentPhotoUri?.toString(), fechaSeleccionada)
-                Toast.makeText(this, "Fecha seleccionada: $fechaSeleccionada", Toast.LENGTH_SHORT)
-                    .show()
+                // Asegúrate de tener el idUsuario disponible aquí
+                val idUsuario = obtenerIdUsuarioActual() // Método que debes implementar para obtener el ID del usuario
+
+                // Llama a guardarLugarEnBaseDeDatos pasando el idUsuario
+                guardarLugarEnBaseDeDatos(idUsuario, it, currentPhotoUri?.toString(), fechaSeleccionada)
+                Toast.makeText(this, "Fecha seleccionada: $fechaSeleccionada", Toast.LENGTH_SHORT).show()
             }
         }, year, month, day)
 
         datePickerDialog.show()
     }
 
+
+    private fun seleccionarImagen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_MEDIA_IMAGES), REQUEST_CODE_PERMISSIONS)
+                return
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
+                return
+            }
+        }
+        val intent = Intent(Intent.ACTION_PICK).apply {
+            type = "image/*"
+        }
+        startActivityForResult(intent, REQUEST_CODE_SELECT_IMAGE)
+    }
+
     private fun guardarLugarEnBaseDeDatos(
+        idUsuario: Int,  // Asegúrate de tener el ID del usuario disponible
         lugar: LugarTuristico,
         foto: String?,
         fechaVisita: String?
     ) {
-        // Pasamos el objeto LugarTuristico completo
-        val result = dbHelper.insertarLugarFavorito(lugar)
+        lugar.fechaVisita = fechaVisita // Actualiza la fecha de visita en el lugar
+
+        val result = dbHelper.insertarLugarFavorito(idUsuario, lugar)
         if (result != -1L) {
             Toast.makeText(this, "Lugar guardado en favoritos", Toast.LENGTH_SHORT).show()
         } else {
@@ -251,14 +264,13 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 
-    private fun seleccionarImagen() {
-        val intent = Intent(Intent.ACTION_PICK).apply {
-            type = "image/*" // Establece el tipo de contenido para imágenes
-        }
-        startActivityForResult(intent, REQUEST_CODE_SELECT_IMAGE) // Llama a la galería
+    private fun obtenerIdUsuarioActual(): Int {
+        // Método que devuelve el ID del usuario actualmente logueado
+        // Puedes obtener este valor desde SharedPreferences o desde el intent
+        return 1 // Ejemplo, ajustar según tu lógica
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
             val selectedImageUri: Uri? = data?.data
@@ -267,15 +279,5 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                continuarConLaLogica() // Continuar solo si todos los permisos fueron concedidos
-            } else {
-                Toast.makeText(this, "Se requieren permisos para usar esta funcionalidad.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 }
 

@@ -14,8 +14,6 @@ data class LugarTuristico(
     val imagen: Int, // Manteniendo la imagen como Int (referencia a recursos locales en mipmap)
     val latitud: Double,
     val longitud: Double,
-    var favorito: Boolean = false,
-    var isSelected: Boolean = false,
     var fechaVisita: String? = null
 ) : Parcelable {
 
@@ -27,8 +25,6 @@ data class LugarTuristico(
         imagen = parcel.readInt(), // Lee la imagen como Int
         latitud = parcel.readDouble(),
         longitud = parcel.readDouble(),
-        favorito = parcel.readByte() != 0.toByte(),
-        isSelected = parcel.readByte() != 0.toByte(),
         fechaVisita = parcel.readString()
     )
 
@@ -42,8 +38,6 @@ data class LugarTuristico(
         parcel.writeInt(imagen) // Escribe la imagen como Int
         parcel.writeDouble(latitud)
         parcel.writeDouble(longitud)
-        parcel.writeByte(if (favorito) 1 else 0)
-        parcel.writeByte(if (isSelected) 1 else 0)
         parcel.writeString(fechaVisita)
     }
 
