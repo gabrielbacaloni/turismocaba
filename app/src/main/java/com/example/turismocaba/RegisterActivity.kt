@@ -71,16 +71,18 @@ class RegisterActivity : AppCompatActivity() {
             if (newRowId != -1L) {
                 Toast.makeText(this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show()
 
-                // Guardar el email en SharedPreferences si es necesario
-                val sharedPreferences = getSharedPreferences("SesionUsuario", MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                editor.putString("email", email)
-                editor.putBoolean("sesionIniciada", true)
-                editor.apply()
+                // Guardar el ID y el email en SharedPreferences con el nombre "MisPreferencias"
+                val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
+                with(sharedPreferences.edit()) {
+                    putInt("ID_USUARIO", newRowId.toInt())
+                    putString("email", email)
+                    putBoolean("sesionIniciada", true)
+                    apply()
+                }
 
                 // Redirigir a LoginActivity pasando la ID del usuario
                 val intent = Intent(this, LoginActivity::class.java).apply {
-                    putExtra("USER_ID", newRowId)  // Pasar la ID del usuario a la siguiente actividad
+                    putExtra("ID_USUARIO", newRowId)  // Pasar la ID del usuario a la siguiente actividad
                     putExtra("NOMBRE_USUARIO", nombre) // Pasar el nombre del usuario
                 }
                 startActivity(intent)

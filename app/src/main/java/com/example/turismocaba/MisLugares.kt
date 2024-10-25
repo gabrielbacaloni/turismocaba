@@ -21,7 +21,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import java.io.File
 import java.text.SimpleDateFormat
 
 class MisLugaresActivity : AppCompatActivity() {
@@ -57,7 +56,7 @@ class MisLugaresActivity : AppCompatActivity() {
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerViewMisLugares)
 
-        // Obtener el ID del usuario logueado (puedes implementar el método obtenerIdUsuarioActual)
+        // Obtener el ID del usuario logueado
         val idUsuario = obtenerIdUsuarioActual()
 
         // Obtener los lugares favoritos del usuario desde la base de datos
@@ -109,7 +108,7 @@ class MisLugaresActivity : AppCompatActivity() {
             val destinationActivity = when (item.itemId) {
                 R.id.navigation_home -> LoginActivity::class.java
                 R.id.navigation_perfil -> PerfilActivity::class.java
-                else -> null // Asegúrate de que haya un valor por defecto
+                else -> null
             }
 
             if (destinationActivity != null) {
@@ -165,15 +164,12 @@ class MisLugaresActivity : AppCompatActivity() {
         val idUsuario = obtenerIdUsuarioActual() // Obtén el id del usuario
         val deletedRows = dbHelper.eliminarLugarFavorito(idUsuario, lugar.id) // Pasamos ambos IDs como Int
 
-        if (deletedRows > 0) { // Verifica si se eliminó alguna fila
+        if (deletedRows > 0) {
             Toast.makeText(this, "${lugar.nombre} ha sido eliminado de tus favoritos", Toast.LENGTH_SHORT).show()
-            // ... resto del código ...
         } else {
             Toast.makeText(this, "Error al eliminar de favoritos",Toast.LENGTH_SHORT).show()
         }
     }
-
-    // Resto de métodos como capturarFoto, mostrarCalendario, seleccionarImagen, etc.
 
     private fun capturarFoto() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -217,7 +213,7 @@ class MisLugaresActivity : AppCompatActivity() {
         val datePickerDialog = DatePickerDialog(this, { _, year, monthOfYear, dayOfMonth ->
             val fechaSeleccionada = "$dayOfMonth/${monthOfYear + 1}/$year"
             currentLugar?.let {
-                // Asegúrate de tener el idUsuario disponible aquí
+
                 val idUsuario = obtenerIdUsuarioActual() // Método que debes implementar para obtener el ID del usuario
 
                 // Llama a guardarLugarEnBaseDeDatos pasando el idUsuario
@@ -249,7 +245,7 @@ class MisLugaresActivity : AppCompatActivity() {
     }
 
     private fun guardarLugarEnBaseDeDatos(
-        idUsuario: Int,  // Asegúrate de tener el ID del usuario disponible
+        idUsuario: Int,
         lugar: LugarTuristico,
         foto: String?,
         fechaVisita: String?
@@ -266,8 +262,7 @@ class MisLugaresActivity : AppCompatActivity() {
 
     private fun obtenerIdUsuarioActual(): Int {
         // Método que devuelve el ID del usuario actualmente logueado
-        // Puedes obtener este valor desde SharedPreferences o desde el intent
-        return 1 // Ejemplo, ajustar según tu lógica
+        return 1
     }
 
 override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

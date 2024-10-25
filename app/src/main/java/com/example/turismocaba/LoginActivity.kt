@@ -3,18 +3,10 @@ package com.example.turismocaba
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class LoginActivity : AppCompatActivity() {
@@ -45,6 +37,7 @@ class LoginActivity : AppCompatActivity() {
 
         // Configurar el nombre del usuario en la barra de navegación
         bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+
 
         // Crear el listado de lugares con sus coordenadas
         val lugares = listOf(

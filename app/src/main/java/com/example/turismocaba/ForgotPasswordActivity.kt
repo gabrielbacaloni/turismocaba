@@ -46,15 +46,13 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 val usuario = dbHelper.obtenerUsuarioPorEmail(email)
 
                 if (usuario != null) {
-                    // Aquí podrías agregar la lógica para verificar las respuestas a las preguntas de seguridad.
-                    // Por simplicidad, asumimos que las respuestas son correctas y actualizamos la contraseña.
 
                     dbHelper.actualizarContrasena(usuario, nuevaContrasena) // Pasar el objeto 'usuario' completo
                     Toast.makeText(this, "Contraseña restablecida con éxito", Toast.LENGTH_SHORT).show()
 
                     // Redirigir a LoginActivity con el nombre del usuario
                     val intent = Intent(this, LoginActivity::class.java).apply {
-                        putExtra("NOMBRE_USUARIO", usuario.nombre)  // Asumiendo que el objeto 'usuario' tiene un campo 'nombre'
+                        putExtra("NOMBRE_USUARIO", usuario.nombre)
                     }
                     startActivity(intent)
                     finish()
