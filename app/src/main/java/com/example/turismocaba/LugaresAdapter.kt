@@ -1,7 +1,9 @@
 package com.example.turismocaba
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -10,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import androidx.viewpager2.widget.ViewPager2
 
 class MisLugaresAdapter(
     private val idUsuario: Int, // ID del usuario actual
@@ -42,11 +45,10 @@ class MisLugaresAdapter(
 
         val estaEnFavoritos = TurismoCABADBHelper.verificarLugarEnFavoritos(idUsuario, lugar.id)
 
-        if (estaEnFavoritos) {
-            holder.btnQuitarFavorito.setImageResource(R.drawable.ic_favorite_filled)
-        } else {
-            holder.btnQuitarFavorito.setImageResource(R.drawable.ic_favorite_border)
-        }
+        holder.btnQuitarFavorito.setImageResource(
+            if (estaEnFavoritos) R.drawable.ic_favorite_filled
+            else R.drawable.ic_favorite_border
+        )
 
         // Configurar el botón de quitar favorito
         holder.btnQuitarFavorito.setOnClickListener {
@@ -58,8 +60,18 @@ class MisLugaresAdapter(
             }
         }
 
+        // Configurar el carrusel de fotos
+        val fotos = lugar.fotos.map { Uri.parse(it) } // Convertir la lista de fotos a URIs
+        if (fotos.isNotEmpty()) {
+            val carruselAdapter = CarruselAdapter(fotos)
+            holder.vpCarruselFotos.adapter = carruselAdapter
+            holder.vpCarruselFotos.visibility = View.VISIBLE
+        } else {
+            holder.vpCarruselFotos.visibility = View.GONE // Ocultar el carrusel si no hay fotos
+            Log.d("MisLugaresAdapter", "No hay fotos para el lugar: ${lugar.nombre}")
+        }
 
-        // Configurar el carrusel de opciones (Fuera del setOnClickListener)
+        // Configurar el carrusel de opciones
         val opcionesLugar = listOf(
             OpcionLugar("Ir a ubicación", R.drawable.ic_mapa, OpcionTipo.UBICACION),
             OpcionLugar("Sacar foto", R.drawable.ic_camera, OpcionTipo.FOTO),
@@ -79,6 +91,7 @@ class MisLugaresAdapter(
     class MisLugaresViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNombreLugar: TextView = itemView.findViewById(R.id.tvNombreLugar)
         val imagenImageView: ImageView = itemView.findViewById(R.id.ivImagen)
+        val vpCarruselFotos: ViewPager2 = itemView.findViewById(R.id.vpCarruselFotos)
         val rvOpcionesLugar: RecyclerView = itemView.findViewById(R.id.rvOpcionesLugar)
         val btnQuitarFavorito: ImageButton = itemView.findViewById(R.id.btnQuitarFavorito)
     }

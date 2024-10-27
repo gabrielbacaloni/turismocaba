@@ -5,11 +5,13 @@
     android:orientation="vertical"
     android:padding="8dp">
 
+    <!-- Contenedor horizontal para la imagen del lugar y su nombre -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
+        <!-- Imagen del lugar turístico -->
         <ImageView
             android:id="@+id/ivImagen"
             android:layout_width="80dp"
@@ -17,6 +19,7 @@
             android:scaleType="centerCrop"
             android:layout_marginEnd="8dp" />
 
+        <!-- Información del lugar turístico -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -33,6 +36,7 @@
                 android:layout_marginStart="16dp"/>
         </LinearLayout>
 
+        <!-- Botón para quitar de favoritos -->
         <ImageButton
             android:id="@+id/btnQuitarFavorito"
             android:layout_width="wrap_content"
@@ -43,11 +47,20 @@
             android:layout_gravity="center_vertical" />
     </LinearLayout>
 
+    <!-- RecyclerView para las opciones del lugar turístico -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOpcionesLugar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"/>
+
+    <!-- Carrusel de fotos utilizando ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/vpCarruselFotos"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp" />
+
 </LinearLayout>
 

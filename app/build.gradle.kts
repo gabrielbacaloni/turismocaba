@@ -53,6 +53,7 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.glide)
     implementation(libs.glide.transformations)
+    implementation(libs.viewpager2)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

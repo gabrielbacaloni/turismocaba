@@ -54,7 +54,11 @@ class MisLugaresActivity : AppCompatActivity() {
 
         dbHelper = TurismoCABADBHelper(this)
 
+        // Inicializa el RecyclerView
         val recyclerView: RecyclerView = findViewById(R.id.recyclerViewMisLugares)
+
+        // Establecer el LayoutManager
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
         // Obtener el ID del usuario logueado
         val idUsuario = obtenerIdUsuarioActual()
@@ -225,7 +229,6 @@ class MisLugaresActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 
-
     private fun seleccionarImagen() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
@@ -238,41 +241,34 @@ class MisLugaresActivity : AppCompatActivity() {
                 return
             }
         }
-        val intent = Intent(Intent.ACTION_PICK).apply {
-            type = "image/*"
-        }
+
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, REQUEST_CODE_SELECT_IMAGE)
     }
 
-    private fun guardarLugarEnBaseDeDatos(
-        idUsuario: Int,
-        lugar: LugarTuristico,
-        foto: String?,
-        fechaVisita: String?
-    ) {
-        lugar.fechaVisita = fechaVisita // Actualiza la fecha de visita en el lugar
-
-        val result = dbHelper.insertarLugarFavorito(idUsuario, lugar)
-        if (result != -1L) {
-            Toast.makeText(this, "Lugar guardado en favoritos", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Error al guardar el lugar", Toast.LENGTH_SHORT).show()
+    private fun guardarLugarEnBaseDeDatos(idUsuario: Int, lugar: LugarTuristico, uriFoto: String?, fecha: String) {
+        uriFoto?.let {
+            // Asegúrate de que 'fotos' sea mutable
+            if (!lugar.fotos.contains(it)) {
+                lugar.fotos = lugar.fotos + it // Agregar la foto a la lista
+            }
+            dbHelper.actualizarFotosLugar(lugar) // Actualizar las fotos en la base de datos
+            lugaresAdapter.notifyDataSetChanged() // Notificar al adaptador para actualizar la vista
         }
     }
-
     private fun obtenerIdUsuarioActual(): Int {
         // Método que devuelve el ID del usuario actualmente logueado
         return 1
     }
-
-override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
-            val selectedImageUri: Uri? = data?.data
-            currentPhotoUri = selectedImageUri // Guarda la URI seleccionada
-            Toast.makeText(this, "Imagen seleccionada", Toast.LENGTH_SHORT).show()
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                // Permiso otorgado, puedes proceder a abrir la cámara
+            } else {
+                Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show()
+            }
         }
     }
-
 }
 

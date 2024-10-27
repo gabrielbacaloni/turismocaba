@@ -14,7 +14,8 @@ data class LugarTuristico(
     val imagen: Int, // Manteniendo la imagen como Int (referencia a recursos locales en mipmap)
     val latitud: Double,
     val longitud: Double,
-    var fechaVisita: String? = null
+    var fechaVisita: String? = null,
+    var fotos: List<String> = emptyList() // Lista de rutas de imágenes capturadas
 ) : Parcelable {
 
     private constructor(parcel: Parcel) : this(
@@ -22,10 +23,11 @@ data class LugarTuristico(
         nombre = parcel.readString() ?: "",
         descripcion = parcel.readString() ?: "",
         ubicacion = parcel.readString() ?: "",
-        imagen = parcel.readInt(), // Lee la imagen como Int
+        imagen = parcel.readInt(),
         latitud = parcel.readDouble(),
         longitud = parcel.readDouble(),
-        fechaVisita = parcel.readString()
+        fechaVisita = parcel.readString(),
+        fotos = parcel.createStringArrayList() ?: emptyList() // Leer la lista de fotos
     )
 
     override fun describeContents(): Int = 0
@@ -35,10 +37,11 @@ data class LugarTuristico(
         parcel.writeString(nombre)
         parcel.writeString(descripcion)
         parcel.writeString(ubicacion)
-        parcel.writeInt(imagen) // Escribe la imagen como Int
+        parcel.writeInt(imagen)
         parcel.writeDouble(latitud)
         parcel.writeDouble(longitud)
         parcel.writeString(fechaVisita)
+        parcel.writeStringList(fotos) // Escribe la lista de fotos
     }
 
     companion object CREATOR : Parcelable.Creator<LugarTuristico> {
@@ -57,7 +60,7 @@ data class LugarTuristico(
                 nombre = "Obelisco",
                 descripcion = "Descripción del Obelisco",
                 ubicacion = "Ubicación del Obelisco",
-                imagen = R.mipmap.ic_obelisco, // Referencia a mipmap
+                imagen = R.mipmap.ic_obelisco,
                 latitud = -34.6037,
                 longitud = -58.3816
             ),
@@ -66,7 +69,7 @@ data class LugarTuristico(
                 nombre = "San Telmo",
                 descripcion = "Descripción de San Telmo",
                 ubicacion = "Ubicación de San Telmo",
-                imagen = R.mipmap.ic_santelmo, // Referencia a mipmap
+                imagen = R.mipmap.ic_santelmo,
                 latitud = -34.6212,
                 longitud = -58.3731
             ),
@@ -75,7 +78,7 @@ data class LugarTuristico(
                 nombre = "Caminito",
                 descripcion = "Descripción de Caminito",
                 ubicacion = "Ubicación de Caminito",
-                imagen = R.mipmap.ic_caminito, // Referencia a mipmap
+                imagen = R.mipmap.ic_caminito,
                 latitud = -34.6345,
                 longitud = -58.3630
             ),

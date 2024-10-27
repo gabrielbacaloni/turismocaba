@@ -32,6 +32,7 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         const val COLUMN_FECHA_VISITA = "fecha_visita"
         const val COLUMN_ID_USUARIO = "id_usuario"
         const val COLUMN_ID_USER_FAV ="id_user_fav"
+        const val COLUMN_FOTOS = "fotos"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -60,6 +61,7 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
                 $COLUMN_UBICACION TEXT,
                 $COLUMN_ID_USUARIO INTEGER,
                 $COLUMN_ID_USER_FAV INTEGER,
+                $COLUMN_FOTOS TEXT,
                 FOREIGN KEY ($COLUMN_ID_USER_FAV) REFERENCES $TABLE_USERS($COLUMN_ID)   
             
             )
@@ -88,6 +90,7 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
             put(COLUMN_FECHA_VISITA, lugar.fechaVisita)
             put(COLUMN_DESCRIPCION, lugar.descripcion)
             put(COLUMN_UBICACION, lugar.ubicacion)
+            put(COLUMN_FOTOS, lugar.fotos.joinToString(","))
         }
         val result = db.insert(TABLE_FAVORITOS, null, values)
         db.close()
@@ -129,7 +132,8 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
                     imagen = getInt(getColumnIndexOrThrow(COLUMN_LUGAR_IMAGEN)),
                     latitud = getDouble(getColumnIndexOrThrow(COLUMN_LUGAR_LATITUD)),
                     longitud = getDouble(getColumnIndexOrThrow(COLUMN_LUGAR_LONGITUD)),
-                    fechaVisita = getString(getColumnIndexOrThrow(COLUMN_FECHA_VISITA))
+                    fechaVisita = getString(getColumnIndexOrThrow(COLUMN_FECHA_VISITA)),
+                    fotos = getString(getColumnIndexOrThrow(COLUMN_FOTOS)).split(",")
                 )
                 lugaresFavoritos.add(lugar)
             }
@@ -305,6 +309,15 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         cursor.close()
         return existe
     }
+    fun actualizarFotosLugar(lugar: LugarTuristico) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_FOTOS, lugar.fotos.joinToString(",")) // Suponiendo que 'fotos' es una lista de strings
+        }
+        db.update(TABLE_FAVORITOS, values, "$COLUMN_ID_USUARIO = ?", arrayOf(lugar.id.toString())) // Actualiza en la tabla de favoritos
+        db.close()
+    }
+
 
 }
 
