@@ -248,14 +248,15 @@ class MisLugaresActivity : AppCompatActivity() {
 
     private fun guardarLugarEnBaseDeDatos(idUsuario: Int, lugar: LugarTuristico, uriFoto: String?, fecha: String) {
         uriFoto?.let {
-            // Asegúrate de que 'fotos' sea mutable
             if (!lugar.fotos.contains(it)) {
                 lugar.fotos = lugar.fotos + it // Agregar la foto a la lista
             }
-            dbHelper.actualizarFotosLugar(lugar) // Actualizar las fotos en la base de datos
+            lugar.fechaVisita = fecha // Actualiza la fecha del lugar
+            dbHelper.actualizarFotosLugar(lugar) // Actualizar las fotos y la fecha en la base de datos
             lugaresAdapter.notifyDataSetChanged() // Notificar al adaptador para actualizar la vista
         }
     }
+
     private fun obtenerIdUsuarioActual(): Int {
         // Método que devuelve el ID del usuario actualmente logueado
         return 1

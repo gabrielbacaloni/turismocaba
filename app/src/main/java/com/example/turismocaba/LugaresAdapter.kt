@@ -62,8 +62,13 @@ class MisLugaresAdapter(
 
         // Configurar el carrusel de fotos
         val fotos = lugar.fotos.map { Uri.parse(it) } // Convertir la lista de fotos a URIs
+        val fechaVisita = lugar.fechaVisita ?: "Fecha no disponible"
+
+        // Crear una lista de fechas, donde todas son iguales
+        val fechas = List(fotos.size) { fechaVisita }
+
         if (fotos.isNotEmpty()) {
-            val carruselAdapter = CarruselAdapter(fotos)
+            val carruselAdapter = CarruselAdapter(fotos, fechas)
             holder.vpCarruselFotos.adapter = carruselAdapter
             holder.vpCarruselFotos.visibility = View.VISIBLE
         } else {

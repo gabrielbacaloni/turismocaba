@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.GlideException
@@ -14,10 +15,10 @@ import com.bumptech.glide.request.target.Target
 import android.graphics.drawable.Drawable
 import com.bumptech.glide.load.DataSource
 
-class CarruselAdapter(fotos: List<Uri>) :
+class CarruselAdapter(private val fotos: List<Uri>, private val fechas: List<String>) :
     RecyclerView.Adapter<CarruselAdapter.CarruselViewHolder>() {
 
-    private val validFotos: List<Uri> = fotos.filter { it != null && it.toString().isNotEmpty() }
+    private val validFotos: List<Uri> = fotos.filter { it.toString().isNotEmpty() }
 
     init {
         Log.d("CarruselAdapter", "Tamaño de fotos: ${validFotos.size}")
@@ -28,6 +29,7 @@ class CarruselAdapter(fotos: List<Uri>) :
 
     class CarruselViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.ivCarruselImage)
+        val tvFechaVisita: TextView = itemView.findViewById(R.id.tvFechaVisita) // Asegúrate de que este ID sea correcto
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CarruselViewHolder {
@@ -37,12 +39,13 @@ class CarruselAdapter(fotos: List<Uri>) :
     }
 
     override fun onBindViewHolder(holder: CarruselViewHolder, position: Int) {
-        // Usar holder.adapterPosition para obtener la posición actual
         val currentPosition = holder.adapterPosition
         val imageUri = validFotos[currentPosition]
+        val fechaVisita = if (position < fechas.size) fechas[position] else "Fecha no disponible"
+
         Log.d("CarruselAdapter", "Cargando imagen en posición $currentPosition: $imageUri")
 
-        if (imageUri != null && imageUri.toString().isNotEmpty()) {
+        if (imageUri.toString().isNotEmpty()) {
             Glide.with(holder.itemView.context)
                 .load(imageUri)
                 .placeholder(R.drawable.ic_placeholder) // Placeholder mientras se carga
@@ -69,9 +72,11 @@ class CarruselAdapter(fotos: List<Uri>) :
                     }
                 })
                 .into(holder.imageView)
+            holder.tvFechaVisita.text = fechaVisita // Establecer la fecha en el TextView
         } else {
-            Log.e("CarruselAdapter", "La URI de la imagen en la posición $currentPosition es null o vacía")
-            holder.imageView.setImageResource(R.drawable.ic_image) // Imagen por defecto
+            Log.e("CarruselAdapter", "La URI de la imagen en la posición $currentPosition es vacía")
+            holder.imageView.setImageResource(R.drawable.ic_image)
+            holder.tvFechaVisita.text = "Fecha no disponible"
         }
     }
 

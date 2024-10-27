@@ -313,10 +313,12 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_FOTOS, lugar.fotos.joinToString(",")) // Suponiendo que 'fotos' es una lista de strings
+            put(COLUMN_FECHA_VISITA, lugar.fechaVisita) // Asegúrate de guardar la fecha también
         }
         db.update(TABLE_FAVORITOS, values, "$COLUMN_ID_USUARIO = ?", arrayOf(lugar.id.toString())) // Actualiza en la tabla de favoritos
         db.close()
     }
+
 
 
 }
