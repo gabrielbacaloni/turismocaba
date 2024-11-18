@@ -11,11 +11,11 @@ data class LugarTuristico(
     val nombre: String,
     val descripcion: String,
     val ubicacion: String,
-    val imagen: Int, // Manteniendo la imagen como Int (referencia a recursos locales en mipmap)
+    val imagen: Int,
     val latitud: Double,
     val longitud: Double,
     var fechaVisita: String? = null,
-    var fotos: List<String> = emptyList() // Lista de rutas de imágenes capturadas
+    var fotos: List<String> = emptyList()
 ) : Parcelable {
 
     private constructor(parcel: Parcel) : this(

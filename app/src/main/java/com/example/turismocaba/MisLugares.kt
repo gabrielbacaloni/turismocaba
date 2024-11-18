@@ -258,9 +258,10 @@ class MisLugaresActivity : AppCompatActivity() {
     }
 
     private fun obtenerIdUsuarioActual(): Int {
-        // Método que devuelve el ID del usuario actualmente logueado
-        return 1
+        val sharedPreferences = getSharedPreferences("MisPreferencias", MODE_PRIVATE)
+        return sharedPreferences.getInt("ID_USUARIO", -1)
     }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
@@ -272,4 +273,3 @@ class MisLugaresActivity : AppCompatActivity() {
         }
     }
 }
-

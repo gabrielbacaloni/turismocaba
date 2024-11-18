@@ -121,7 +121,16 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
     fun obtenerLugaresFavoritos(idUsuario: Int): List<LugarTuristico> {
         val db = readableDatabase
         val lugaresFavoritos = mutableListOf<LugarTuristico>()
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_FAVORITOS WHERE $COLUMN_ID_USER_FAV = ?", arrayOf(idUsuario.toString()))
+        val cursor = db.query(
+            TABLE_FAVORITOS,  // Tabla a consultar
+            null,            // Columnas a seleccionar (null selecciona todas)
+            "$COLUMN_ID_USER_FAV = ?",  // WHERE Clause (filtra por id_usuario)
+            arrayOf(idUsuario.toString()), // Valores para la cláusula WHERE
+            null,            // GROUP BY
+            null,            // HAVING
+            null             // ORDER BY
+        )
+
         with(cursor) {
             while (moveToNext()) {
                 val lugar = LugarTuristico(
@@ -322,5 +331,3 @@ class TurismoCABADBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
 
 
 }
-
-

@@ -29,7 +29,7 @@ class CarruselAdapter(private val fotos: List<Uri>, private val fechas: List<Str
 
     class CarruselViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.ivCarruselImage)
-        val tvFechaVisita: TextView = itemView.findViewById(R.id.tvFechaVisita) // Asegúrate de que este ID sea correcto
+        val tvFechaVisita: TextView = itemView.findViewById(R.id.tvFechaVisita)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CarruselViewHolder {
