@@ -86,6 +86,8 @@ class PerfilActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+
+        // Establecemos "Perfil" como el elemento seleccionado
         bottomNavigationView.selectedItemId = R.id.navigation_perfil
         bottomNavigationView.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
 
@@ -110,5 +112,6 @@ class PerfilActivity : AppCompatActivity() {
             }
         }
     }
+
 }
 

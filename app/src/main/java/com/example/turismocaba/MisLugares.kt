@@ -105,10 +105,14 @@ class MisLugaresActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottomNavigationView)
-        bottomNavigation.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
 
-        bottomNavigation.setOnItemSelectedListener { item ->
+        // Establecemos "Mis Lugares" como el elemento seleccionado
+        bottomNavigationView.selectedItemId = R.id.navigation_mis_lugares
+
+        bottomNavigationView.menu.findItem(R.id.navigation_perfil).title = nombreUsuario
+
+        bottomNavigationView.setOnItemSelectedListener { item ->
             val destinationActivity = when (item.itemId) {
                 R.id.navigation_home -> LoginActivity::class.java
                 R.id.navigation_perfil -> PerfilActivity::class.java
@@ -127,6 +131,7 @@ class MisLugaresActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun configurarRecyclerView(
         recyclerView: RecyclerView,
